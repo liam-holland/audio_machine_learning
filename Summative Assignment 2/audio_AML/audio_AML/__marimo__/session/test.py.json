@@ -111,7 +111,7 @@
     },
     {
       "id": "RGSE",
-      "code_hash": "79d7e2d802a19b744b94c0fcec04d304",
+      "code_hash": "591d7b559c458e4072ba468e876f1982",
       "outputs": [
         {
           "type": "data",
@@ -123,8 +123,34 @@
       "console": []
     },
     {
-      "id": "spbS",
-      "code_hash": "e184835a1a3d356203989330ae6875e5",
+      "id": "rYCe",
+      "code_hash": "6055195175dd4841e34d4ab32690af4f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "WyTH",
+      "code_hash": "ae3fde46f997400bbb18657b6fd4afb5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "tHYH",
+      "code_hash": "cd67c0f7d3c05c120bf420ac057adca2",
       "outputs": [
         {
           "type": "data",
@@ -137,7 +163,7 @@
     },
     {
       "id": "JFdg",
-      "code_hash": "11a256a66339da3a9afe3b4f6fce1c48",
+      "code_hash": "454d6157611dce3f77a3a8601cf68585",
       "outputs": [
         {
           "type": "data",
@@ -150,7 +176,7 @@
     },
     {
       "id": "ZZQB",
-      "code_hash": "c101ae5d04ee6d54095ee975fe57a897",
+      "code_hash": "4f44daad249378e5f8bd18536cff3d36",
       "outputs": [
         {
           "type": "data",
@@ -163,7 +189,7 @@
         {
           "type": "stream",
           "name": "stdout",
-          "text": "Help on class Reverb in module pedalboard_native:\n\nclass Reverb(Plugin)\n |  A simple reverb effect. Uses a simple stereo reverb algorithm, based on the technique and tunings used in `FreeVerb <https://ccrma.stanford.edu/~jos/pasp/Freeverb.html>_`.\n |\n |  Method resolution order:\n |      Reverb\n |      Plugin\n |      pybind11_builtins.pybind11_object\n |      builtins.object\n |\n |  Methods defined here:\n |\n |  __init__(...)\n |      __init__(self: pedalboard_native.Reverb, room_size: float = 0.5, damping: float = 0.5, wet_level: float = 0.33, dry_level: float = 0.4, width: float = 1.0, freeze_mode: float = 0.0) -> None\n |\n |  __repr__(...)\n |      __repr__(self: pedalboard_native.Reverb) -> str\n |\n |  ----------------------------------------------------------------------\n |  Data descriptors defined here:\n |\n |  damping\n |\n |  dry_level\n |\n |  freeze_mode\n |\n |  room_size\n |\n |  wet_level\n |\n |  width\n |\n |  ----------------------------------------------------------------------\n |  Methods inherited from Plugin:\n |\n |  __call__(...)\n |      __call__(self: pedalboard_native.Plugin, input_array: numpy.ndarray, sample_rate: float, buffer_size: int = 8192, reset: bool = True) -> numpy.ndarray[numpy.float32]\n |\n |      Run an audio buffer through this plugin. Alias for :py:meth:`process`.\n |\n |  process(...)\n |      process(self: pedalboard_native.Plugin, input_array: numpy.ndarray, sample_rate: float, buffer_size: int = 8192, reset: bool = True) -> numpy.ndarray[numpy.float32]\n |\n |\n |      Run a 32-bit or 64-bit floating point audio buffer through this plugin.\n |      (If calling this multiple times with multiple plugins, consider creating a\n |      :class:`pedalboard.Pedalboard` object instead.)\n |\n |      The returned array may contain up to (but not more than) the same number of\n |      samples as were provided. If fewer samples were returned than expected, the\n |      plugin has likely buffered audio inside itself. To receive the remaining\n |      audio, pass another audio buffer into ``process`` with ``reset`` set to\n |      ``True``.\n |\n |      If the provided buffer uses a 64-bit datatype, it will be converted to 32-bit\n |      for processing.\n |\n |      The provided ``buffer_size`` argument will be used to control the size of\n |      each chunk of audio provided to the plugin. Higher buffer sizes may speed up\n |      processing at the expense of memory usage.\n |\n |      The ``reset`` flag determines if all of the plugins should be reset before\n |      processing begins, clearing any state from previous calls to ``process``.\n |      If calling ``process`` multiple times while processing the same audio file\n |      or buffer, set ``reset`` to ``False``.\n |\n |      The layout of the provided ``input_array`` will be automatically detected,\n |      assuming that the smaller dimension corresponds with the number of channels.\n |      If the number of samples and the number of channels are the same, each\n |      :py:class:`Plugin` object will use the last-detected channel layout until\n |      :py:meth:`reset` is explicitly called (as of v0.9.9).\n |\n |      .. note::\n |          The :py:meth:`process` method can also be used via :py:meth:`__call__`;\n |          i.e.: just calling this object like a function (``my_plugin(...)``) will\n |          automatically invoke :py:meth:`process` with the same arguments.\n |\n |  reset(...)\n |      reset(self: pedalboard_native.Plugin) -> None\n |\n |      Clear any internal state stored by this plugin (e.g.: reverb tails, delay lines, LFO state, etc). The values of plugin parameters will remain unchanged.\n |\n |  ----------------------------------------------------------------------\n |  Readonly properties inherited from Plugin:\n |\n |  is_effect\n |      True iff this plugin is an audio effect and accepts audio as input.\n |\n |      *Introduced in v0.7.4.*\n |\n |  is_instrument\n |      True iff this plugin is not an audio effect and accepts only MIDI input, not audio.\n |\n |      *Introduced in v0.7.4.*\n |\n |  ----------------------------------------------------------------------\n |  Static methods inherited from pybind11_builtins.pybind11_object:\n |\n |  __new__(*args, **kwargs) class method of pybind11_builtins.pybind11_object\n |      Create and return a new object.  See help(type) for accurate signature.\n\n",
+          "text": "Help on class Chorus in module pedalboard_native:\n\nclass Chorus(Plugin)\n |  A basic chorus effect.\n |\n |  This audio effect can be controlled via the speed and depth of the LFO controlling the frequency response, a mix control, a feedback control, and the centre delay of the modulation.\n |\n |  Note: To get classic chorus sounds try to use a centre delay time around 7-8 ms with a low feedback volume and a low depth. This effect can also be used as a flanger with a lower centre delay time and a lot of feedback, and as a vibrato effect if the mix value is 1.\n |\n |  Method resolution order:\n |      Chorus\n |      Plugin\n |      pybind11_builtins.pybind11_object\n |      builtins.object\n |\n |  Methods defined here:\n |\n |  __init__(...)\n |      __init__(self: pedalboard_native.Chorus, rate_hz: float = 1.0, depth: float = 0.25, centre_delay_ms: float = 7.0, feedback: float = 0.0, mix: float = 0.5) -> None\n |\n |  __repr__(...)\n |      __repr__(self: pedalboard_native.Chorus) -> str\n |\n |  ----------------------------------------------------------------------\n |  Data descriptors defined here:\n |\n |  centre_delay_ms\n |\n |  depth\n |\n |  feedback\n |\n |  mix\n |\n |  rate_hz\n |      The speed of the chorus effect's low-frequency oscillator (LFO), in Hertz. This value must be between 0 Hz and 100 Hz.\n |\n |  ----------------------------------------------------------------------\n |  Methods inherited from Plugin:\n |\n |  __call__(...)\n |      __call__(self: pedalboard_native.Plugin, input_array: numpy.ndarray, sample_rate: float, buffer_size: int = 8192, reset: bool = True) -> numpy.ndarray[numpy.float32]\n |\n |      Run an audio buffer through this plugin. Alias for :py:meth:`process`.\n |\n |  process(...)\n |      process(self: pedalboard_native.Plugin, input_array: numpy.ndarray, sample_rate: float, buffer_size: int = 8192, reset: bool = True) -> numpy.ndarray[numpy.float32]\n |\n |\n |      Run a 32-bit or 64-bit floating point audio buffer through this plugin.\n |      (If calling this multiple times with multiple plugins, consider creating a\n |      :class:`pedalboard.Pedalboard` object instead.)\n |\n |      The returned array may contain up to (but not more than) the same number of\n |      samples as were provided. If fewer samples were returned than expected, the\n |      plugin has likely buffered audio inside itself. To receive the remaining\n |      audio, pass another audio buffer into ``process`` with ``reset`` set to\n |      ``True``.\n |\n |      If the provided buffer uses a 64-bit datatype, it will be converted to 32-bit\n |      for processing.\n |\n |      The provided ``buffer_size`` argument will be used to control the size of\n |      each chunk of audio provided to the plugin. Higher buffer sizes may speed up\n |      processing at the expense of memory usage.\n |\n |      The ``reset`` flag determines if all of the plugins should be reset before\n |      processing begins, clearing any state from previous calls to ``process``.\n |      If calling ``process`` multiple times while processing the same audio file\n |      or buffer, set ``reset`` to ``False``.\n |\n |      The layout of the provided ``input_array`` will be automatically detected,\n |      assuming that the smaller dimension corresponds with the number of channels.\n |      If the number of samples and the number of channels are the same, each\n |      :py:class:`Plugin` object will use the last-detected channel layout until\n |      :py:meth:`reset` is explicitly called (as of v0.9.9).\n |\n |      .. note::\n |          The :py:meth:`process` method can also be used via :py:meth:`__call__`;\n |          i.e.: just calling this object like a function (``my_plugin(...)``) will\n |          automatically invoke :py:meth:`process` with the same arguments.\n |\n |  reset(...)\n |      reset(self: pedalboard_native.Plugin) -> None\n |\n |      Clear any internal state stored by this plugin (e.g.: reverb tails, delay lines, LFO state, etc). The values of plugin parameters will remain unchanged.\n |\n |  ----------------------------------------------------------------------\n |  Readonly properties inherited from Plugin:\n |\n |  is_effect\n |      True iff this plugin is an audio effect and accepts audio as input.\n |\n |      *Introduced in v0.7.4.*\n |\n |  is_instrument\n |      True iff this plugin is not an audio effect and accepts only MIDI input, not audio.\n |\n |      *Introduced in v0.7.4.*\n |\n |  ----------------------------------------------------------------------\n |  Static methods inherited from pybind11_builtins.pybind11_object:\n |\n |  __new__(*args, **kwargs) class method of pybind11_builtins.pybind11_object\n |      Create and return a new object.  See help(type) for accurate signature.\n\n",
           "mimetype": "text/plain"
         }
       ]
