@@ -1,0 +1,172 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.20.4",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "MJUe",
+      "code_hash": "06a951228b48e0d2861990ba4b9f2b53",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "e2ca578fe9559abb6b51a2b127f2ae94",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "0ee58d21c8e9eb5e2eb2d20f9b50c15b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "c2d51dab0c7a258a01115653c23139d6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "4d0e041491b763a99bbf55c3d01fe86c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "7fe65c454d9fb0173fdfff6f8a9ea58a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "147d174a4caf103ab571aa1a81dcd85a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "1ecc2c66ae666243fae108aad2f1065c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='BYtC-0' random-id='20d858ad-a3ee-7db7-788b-05e1215c8d79'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;file_path&#92;&quot;:&#92;&quot;./Medley-solos-DB/Medley-solos-DB_test-0_003d41a8-afad-501f-fbc3-d406dc694ceb.wav&#92;&quot;,&#92;&quot;uuid4&#92;&quot;:&#92;&quot;003d41a8-afad-501f-fbc3-d406dc694ceb&#92;&quot;,&#92;&quot;subset&#92;&quot;:&#92;&quot;test&#92;&quot;,&#92;&quot;instrument&#92;&quot;:&#92;&quot;clarinet&#92;&quot;,&#92;&quot;instrument_id&#92;&quot;:0,&#92;&quot;song_id&#92;&quot;:0},{&#92;&quot;file_path&#92;&quot;:&#92;&quot;./Medley-solos-DB/Medley-solos-DB_test-0_007a6103-bf60-528a-f36f-6267c88bcf03.wav&#92;&quot;,&#92;&quot;uuid4&#92;&quot;:&#92;&quot;007a6103-bf60-528a-f36f-6267c88bcf03&#92;&quot;,&#92;&quot;subset&#92;&quot;:&#92;&quot;test&#92;&quot;,&#92;&quot;instrument&#92;&quot;:&#92;&quot;clarinet&#92;&quot;,&#92;&quot;instrument_id&#92;&quot;:0,&#92;&quot;song_id&#92;&quot;:6},{&#92;&quot;file_path&#92;&quot;:&#92;&quot;./Medley-solos-DB/Medley-solos-DB_test-0_012639dd-3f06-57f8-f61c-96fcdca452e9.wav&#92;&quot;,&#92;&quot;uuid4&#92;&quot;:&#92;&quot;012639dd-3f06-57f8-f61c-96fcdca452e9&#92;&quot;,&#92;&quot;subset&#92;&quot;:&#92;&quot;test&#92;&quot;,&#92;&quot;instrument&#92;&quot;:&#92;&quot;clarinet&#92;&quot;,&#92;&quot;instrument_id&#92;&quot;:0,&#92;&quot;song_id&#92;&quot;:16},{&#92;&quot;file_path&#92;&quot;:&#92;&quot;./Medley-solos-DB/Medley-solos-DB_test-0_023737df-a7c6-5741-fa57-d99895724a75.wav&#92;&quot;,&#92;&quot;uuid4&#92;&quot;:&#92;&quot;023737df-a7c6-5741-fa57-d99895724a75&#92;&quot;,&#92;&quot;subset&#92;&quot;:&#92;&quot;test&#92;&quot;,&#92;&quot;instrument&#92;&quot;:&#92;&quot;clarinet&#92;&quot;,&#92;&quot;instrument_id&#92;&quot;:0,&#92;&quot;song_id&#92;&quot;:14},{&#92;&quot;file_path&#92;&quot;:&#92;&quot;./Medley-solos-DB/Medley-solos-DB_test-0_024f9a79-e881-550d-fcb2-e381944e9fcb.wav&#92;&quot;,&#92;&quot;uuid4&#92;&quot;:&#92;&quot;024f9a79-e881-550d-fcb2-e381944e9fcb&#92;&quot;,&#92;&quot;subset&#92;&quot;:&#92;&quot;test&#92;&quot;,&#92;&quot;instrument&#92;&quot;:&#92;&quot;clarinet&#92;&quot;,&#92;&quot;instrument_id&#92;&quot;:0,&#92;&quot;song_id&#92;&quot;:17}]&quot;' data-total-rows='5' data-total-columns='6' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;file_path&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;uuid4&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;subset&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;instrument&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;instrument_id&quot;,[&quot;integer&quot;,&quot;int64&quot;]],[&quot;song_id&quot;,[&quot;integer&quot;,&quot;int64&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='false' data-show-data-types='true' data-show-page-size-selector='false' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-has-stable-row-id='false' data-lazy='false' data-preload='false' data-download-file-name='&quot;df&quot;'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "79d7e2d802a19b744b94c0fcec04d304",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "spbS",
+      "code_hash": "e184835a1a3d356203989330ae6875e5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "JFdg",
+      "code_hash": "11a256a66339da3a9afe3b4f6fce1c48",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZZQB",
+      "code_hash": "c101ae5d04ee6d54095ee975fe57a897",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "Help on class Reverb in module pedalboard_native:\n\nclass Reverb(Plugin)\n |  A simple reverb effect. Uses a simple stereo reverb algorithm, based on the technique and tunings used in `FreeVerb <https://ccrma.stanford.edu/~jos/pasp/Freeverb.html>_`.\n |\n |  Method resolution order:\n |      Reverb\n |      Plugin\n |      pybind11_builtins.pybind11_object\n |      builtins.object\n |\n |  Methods defined here:\n |\n |  __init__(...)\n |      __init__(self: pedalboard_native.Reverb, room_size: float = 0.5, damping: float = 0.5, wet_level: float = 0.33, dry_level: float = 0.4, width: float = 1.0, freeze_mode: float = 0.0) -> None\n |\n |  __repr__(...)\n |      __repr__(self: pedalboard_native.Reverb) -> str\n |\n |  ----------------------------------------------------------------------\n |  Data descriptors defined here:\n |\n |  damping\n |\n |  dry_level\n |\n |  freeze_mode\n |\n |  room_size\n |\n |  wet_level\n |\n |  width\n |\n |  ----------------------------------------------------------------------\n |  Methods inherited from Plugin:\n |\n |  __call__(...)\n |      __call__(self: pedalboard_native.Plugin, input_array: numpy.ndarray, sample_rate: float, buffer_size: int = 8192, reset: bool = True) -> numpy.ndarray[numpy.float32]\n |\n |      Run an audio buffer through this plugin. Alias for :py:meth:`process`.\n |\n |  process(...)\n |      process(self: pedalboard_native.Plugin, input_array: numpy.ndarray, sample_rate: float, buffer_size: int = 8192, reset: bool = True) -> numpy.ndarray[numpy.float32]\n |\n |\n |      Run a 32-bit or 64-bit floating point audio buffer through this plugin.\n |      (If calling this multiple times with multiple plugins, consider creating a\n |      :class:`pedalboard.Pedalboard` object instead.)\n |\n |      The returned array may contain up to (but not more than) the same number of\n |      samples as were provided. If fewer samples were returned than expected, the\n |      plugin has likely buffered audio inside itself. To receive the remaining\n |      audio, pass another audio buffer into ``process`` with ``reset`` set to\n |      ``True``.\n |\n |      If the provided buffer uses a 64-bit datatype, it will be converted to 32-bit\n |      for processing.\n |\n |      The provided ``buffer_size`` argument will be used to control the size of\n |      each chunk of audio provided to the plugin. Higher buffer sizes may speed up\n |      processing at the expense of memory usage.\n |\n |      The ``reset`` flag determines if all of the plugins should be reset before\n |      processing begins, clearing any state from previous calls to ``process``.\n |      If calling ``process`` multiple times while processing the same audio file\n |      or buffer, set ``reset`` to ``False``.\n |\n |      The layout of the provided ``input_array`` will be automatically detected,\n |      assuming that the smaller dimension corresponds with the number of channels.\n |      If the number of samples and the number of channels are the same, each\n |      :py:class:`Plugin` object will use the last-detected channel layout until\n |      :py:meth:`reset` is explicitly called (as of v0.9.9).\n |\n |      .. note::\n |          The :py:meth:`process` method can also be used via :py:meth:`__call__`;\n |          i.e.: just calling this object like a function (``my_plugin(...)``) will\n |          automatically invoke :py:meth:`process` with the same arguments.\n |\n |  reset(...)\n |      reset(self: pedalboard_native.Plugin) -> None\n |\n |      Clear any internal state stored by this plugin (e.g.: reverb tails, delay lines, LFO state, etc). The values of plugin parameters will remain unchanged.\n |\n |  ----------------------------------------------------------------------\n |  Readonly properties inherited from Plugin:\n |\n |  is_effect\n |      True iff this plugin is an audio effect and accepts audio as input.\n |\n |      *Introduced in v0.7.4.*\n |\n |  is_instrument\n |      True iff this plugin is not an audio effect and accepts only MIDI input, not audio.\n |\n |      *Introduced in v0.7.4.*\n |\n |  ----------------------------------------------------------------------\n |  Static methods inherited from pybind11_builtins.pybind11_object:\n |\n |  __new__(*args, **kwargs) class method of pybind11_builtins.pybind11_object\n |      Create and return a new object.  See help(type) for accurate signature.\n\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    }
+  ]
+}
