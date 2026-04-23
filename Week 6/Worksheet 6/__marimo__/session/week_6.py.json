@@ -1,0 +1,597 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.21.1",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "6985e1a993c5c3fe9fe34af1fbf40be0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"audio-machine-learning-workshop-week-6-recurrent-neural-networks\">Audio Machine Learning - Workshop Week 6 - Recurrent Neural Networks</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "87ab6d5a2194106a2e8b04ded8daf1df",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"0-import-libraries\">0 - Import Libraries</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "668c66144e17b7064e337f83f33515ef",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "4dab8cae00fa1041859342638f935cef",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"1-recurrent-layer-in-pytorch\">1 - Recurrent Layer in PyTorch</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "2731669917259f67e84231438e5a20ed",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "726e6a5d196f842d1e9971da46146657",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">In this case:\\\n'input_size' is the number of chanels in the Recurrent Layer input\\\n'hidden_size' is the number of elements in the Recurrent Layer hidden state</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "b7ce1c5a56ac2ebc332e3945d389dcff",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><hr />\n<h3 id=\"exercise-using-a-recurrent-layer\">\u270f\ufe0f\u270f\ufe0f Exercise: Using a Recurrent Layer  \u270f\ufe0f\u270f\ufe0f</h3>\n<hr />\n<span class=\"paragraph\">Referring to the documentation:</span>\n<div class=\"language-text highlight\"><pre><span></span><code>https://pytorch.org/docs/stable/generated/torch.nn.RNN.html\n</code></pre></div>\n<span class=\"paragraph\">Create a random input to be processed by the recurrent layer. It should have batch_size, <marimo-tex class=\"arithmatex\">||(N||)</marimo-tex> = 4, and sequence length, <marimo-tex class=\"arithmatex\">||(L=100||)</marimo-tex>. Create this using torch.randn() and process it with the recurrent layer. Note that the recurrent layer above was called with 'batch_first=True'.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "b3d3b3301b8b8af8c671ae2384b3d6cc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "5ebeabf0331e6fac9d74248cedadcf4d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "c6744269d59e303251270d56af802b20",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Now process the input with the recurrent layer. Use the documentation to see what will be returned by the recurrent layer, and save this to appropriately named variables</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "959734758c9f098a3e213f368bf05d96",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "0e94edbe3ddf9a5baaf7688cc13497db",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><em>NOTE</em>\nPyTorch 1D-Convolutional layers assume inputs have dimensions in the order:</span>\n<ul>\n<li>(N, C, L), i.e. (Batch, Channel, Length)</li>\n</ul>\n<span class=\"paragraph\">PyTorch Recurrent layers assume inputs have dimensions in the order:</span>\n<ul>\n<li>(L,N,H), i.e. (Length, Batch, CHannel)</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "2e2ac318de1686ec6b88828e3f7f97a1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"2-implementing-your-own-recurrent-layer\">2 - Implementing your own recurrent layer</h2>\n<span class=\"paragraph\">The state update equation shown on the PyTorch RNN documentation can be implemented by applying a linear layer to the input, and a linear layer to the hidden state, summing the result and applying the tanh() nonlinearity.</span>\n<span class=\"paragraph\">The RNN needs an initial hidden state before it can process inputs. This should be a tensor of zeros, with the shape depending on the hidden size of the RNN and the batch size. Complete the 'init_state' method such that it initialises the hidden state.</span>\n<span class=\"paragraph\">The RNN forward method should take an input sequence of shape (N, L, 1), where N is the batch size and L is the length of the sequence. It should then iterate over the sequence, applying the RNN state update equation.</span>\n<span class=\"paragraph\">When referring to the shapes of tensors in the RNN documentation, for this exercise <marimo-tex class=\"arithmatex\">||(D=1||)</marimo-tex> and <marimo-tex class=\"arithmatex\">||(num\\_layers=1||)</marimo-tex>.</span>\n<hr />\n<h3 id=\"exercise-complete-the-recurrent-layer-class\">\u270f\ufe0f\u270f\ufe0f Exercise: Complete the Recurrent Layer Class \u270f\ufe0f\u270f\ufe0f</h3>\n<hr />\n<span class=\"paragraph\">Complete this template for your own implementation of the recurrent layer.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "d87e7e8cae5195f6a22f1677f8c5472a",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "9f417319125173796542c533a3739395",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Now we can test if your RNN implementation gives the same result as the PyTorch one!</span>\n<span class=\"paragraph\">First, create a PyTorch RNN and an RNN from the template defined above:</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "654a5a4da9842725e2aec92ed7bf0ca5",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "name 'myRNN' is not defined",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;C:\\conda_envs\\AML_base\\Lib\\site-packages\\marimo\\_runtime\\executor.py&quot;</span>, line <span class=\"m\">138</span>, in <span class=\"n\">execute_cell</span>\n<span class=\"w\">    </span><span class=\"n\">exec</span><span class=\"p\">(</span><span class=\"n\">cell</span><span class=\"o\">.</span><span class=\"n\">body</span><span class=\"p\">,</span> <span class=\"n\">glbls</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;C:\\Users\\Liam Holland\\AppData\\Local\\Temp\\marimo_5312\\__marimo__cell_TqIu_.py&quot;</span>, line <span class=\"m\">1</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">model</span> <span class=\"o\">=</span> <span class=\"n\">myRNN</span><span class=\"p\">(</span><span class=\"mi\">1</span><span class=\"p\">,</span> <span class=\"mi\">8</span><span class=\"p\">)</span> <span class=\"c1\"># Create RNN from Class template</span>\n<span class=\"w\">            </span><span class=\"pm\">^^^^^</span>\n<span class=\"gr\">NameError</span>: <span class=\"n\">name &#39;myRNN&#39; is not defined</span>\n</pre></div>\n</span>",
+          "mimetype": "application/vnd.marimo+traceback"
+        }
+      ]
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "e1b5e540e336e81afb415a3440f434d3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">The Parameters of the RNNs are set randomly, when the RNN is created. The below code copies the parameters from the PyTorch RNN, to the RNN model you defined.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "6e8e20ed3931bf4b17796077b46e523f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "7a2637f98ce9796f2c81fb5d473f1ee5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Now the parameters of the two RNNs are the same, when processing the same input, they should produce the same output:</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "44bf4cbe1f2af4a02b074c27d4e2cdad",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (NameError): ",
+          "traceback": []
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "4a768416c5f9c9ad18c245c0c494b466",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">First, we will check the shapes of the returns:</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "ce6dc5fdec154ff64c3b1ef8a05edd3c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "ef4cea0a3c73928b805da414b2459697",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": "9d91f910326f2da87706aa0426855253",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">If either of these assertions fail, check your RNN class, to see if the shapes of the various tensors are as expected.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nHfw",
+      "code_hash": "ce94d6e5fce6bdc65456e1b85357affc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Second, we will check the values of the tensors in the returns:</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "xXTn",
+      "code_hash": "58474f1ad5261c60b4a6e0221d405e83",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "AjVT",
+      "code_hash": "872e899c00ccf0cbe9823f2d0f3a8aee",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"3-compare-speed-of-rnn-implementations\">3 - Compare speed of RNN implementations</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "pHFh",
+      "code_hash": "2090769086f0bff2d1d88c286ea5bc70",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Now we will do a simple comparison of the speeds of both RNN implementations, using 'tqdm'.</span>\n<span class=\"paragraph\">tqdm creates a handy progress bar, and also tells you the amount of time per iteration it takes to complete a for loop.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "NCOB",
+      "code_hash": "b375665e1fb3fb35c211515303150e19",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "aqbW",
+      "code_hash": "38d87e84497e721f633c9be66b26ad08",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">You should see a progress bar, then a number followed by either 'it/s' or by 's/it'</span>\n<span class=\"paragraph\">'it/s' means the number of iterations of the for-loop completed per second, as 's/it' means the number of seconds taken to complete a single iteration of the for loop.</span>\n<span class=\"paragraph\">For the above, with the PyTorch RNN, it should be completing around 1 s/it. That means it processes an entire batch of ten 10000 length inputs, then backpropagates the loss through this in about one second.</span>\n<span class=\"paragraph\">Now compare this with the custom implementation:</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TRpd",
+      "code_hash": "b81f1fddc8e152bffd1565d5ef4cdd31",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TXez",
+      "code_hash": "5d7264581df8a8c4295d27a86331a145",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">This should take about 3 second per iteration. Much slower!</span>\n<span class=\"paragraph\">A major reason for this is that when PyTorch does calculations, it actually calls a C++ library called 'torch' to do the maths. When using the PyTorch RNN class, PyTorch passes the entire sequence of inputs to the underlying C++ function.</span>\n<span class=\"paragraph\">In the myRNN library, the C++ torch library is still being called to calculate the linear layer outputs, but now it is being called once every time-step in the input sequence! There is some overhead everytime Python calls C++, so this results in it being much slower compared to the PyTorch RNN, which only has to call the C++ library once for the entire sequence.</span>\n<span class=\"paragraph\">To create your own custom PyTorch modules that include recursions (like the RNN), implementing the recursion in C++ will greatly improve processing speed.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "dNNg",
+      "code_hash": "dd6f9affbe994a4dd737e1f330e2dc73",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"4-create-a-distortion-effect-dataset\">4 - Create a Distortion Effect Dataset</h1>\n<span class=\"paragraph\">For this section, we will create a distortion effect dataset, using clean guitar.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "yCnT",
+      "code_hash": "ad82aa318778d460781296ea512108e7",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "wlCL",
+      "code_hash": "007852116b214a93410a4477eb9eb0dc",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "kqZH",
+      "code_hash": "1219c911a06139b2d81ae4fcccc95cec",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "wAgl",
+      "code_hash": "63dc8f83076aa1d90631659dc7998402",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "rEll",
+      "code_hash": "7249e1976c2a210435e4be4702f15cfd",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "dGlV",
+      "code_hash": "a865dc8c8a95669b9416dae2d3fe8769",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "SdmI",
+      "code_hash": "a0b517a7df156c5d40c590eb8894efbc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Below is the dataset class:</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lgWD",
+      "code_hash": "8ccf109e7fe3318506c959f39fe23358",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "yOPj",
+      "code_hash": "c0e58f17df51fe21d40eea41ec8d3fa8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"5-training-a-distortion-model\">5 - Training a Distortion Model</h1></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "fwwy",
+      "code_hash": "52f9fe922241b24ac02ac2bd10cb915e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Lets train a distortion audio effect model using a Recurrent Neural Network.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "LJZf",
+      "code_hash": "37980763df7b74f8e466d200de530da1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Below is a RNN based distortion effects model, that can either use a basic RNN or a GRU:</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "urSm",
+      "code_hash": "513630981762da94ec88e49e19cf6dd2",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "jxvo",
+      "code_hash": "5dd6fb725ce048bd7ca43f360e716244",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Here is the 'Error-To-Signal' Ratio loss function:</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "mWxS",
+      "code_hash": "3001e474b9a286a4455f53ef9a0b258f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "CcZR",
+      "code_hash": "0d49f0330c18c97dad5b71ff3c7324dd",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "YWSi",
+      "code_hash": "37d4f21650839ed192a13263395e62d1",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "zlud",
+      "code_hash": "872e05f8944add60aab7ef16395b84a6",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "tZnO",
+      "code_hash": "f88f68f4c27315f9d1154372bdf38c10",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "xvXZ",
+      "code_hash": "1aea25c0e894128049dd20fbf975c4e8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><hr />\n<h3 id=\"exercise-implementing-rnn-training\">\u270f\ufe0f\u270f\ufe0f Exercise: Implementing RNN Training \u270f\ufe0f\u270f\ufe0f</h3>\n<hr />\n<span class=\"paragraph\">Your task is to implement the training loop:</span>\n<span class=\"paragraph\">The training loop will carry out 'truncated backpropagation through time'.</span>\n<span class=\"paragraph\">For each batch, the loop should do the following:</span>\n<ol>\n<li>Set the model hidden state to 'None'</li>\n<li>Initiate a for-loop that processes the batch sequentially, in segments of length 'tbptt_step', i.e each segment of the batch should be of shape [N, tbptt_step, 1]</li>\n<li>\n<span class=\"paragraph\">For each segment:</span>\n<ol>\n<li>Zero the gradients in the optimiser</li>\n<li>Get the model predictions for that segment</li>\n<li>Calculate the loss</li>\n<li>Do the backward pass</li>\n<li>call <code>optimiser.step()</code></li>\n<li>Deatch the hidden state, using <code>model.detach_hidden()</code></li>\n<li>append the loss to the loss_list</li>\n</ol>\n</li>\n</ol></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "CLip",
+      "code_hash": "11d9f9e15f848e9df15a73b0664f1943",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "YECM",
+      "code_hash": "d4dcc583fc35cb000c431fdbef874741",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"further-work\">Further Work</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "cEAS",
+      "code_hash": "c1df674809d390953044fcf6149560e5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h3 id=\"validation-loss\">Validation Loss:</h3>\n<ul>\n<li>Create a validation dataset with segment length of 5 seconds</li>\n<li>After each training epoch, use the model to process the validation dataset</li>\n<li>Find the average loss on the validation dataset, and save it to a list called 'validation_losses'</li>\n</ul>\n<h3 id=\"validationtest-dataset\">Validation/Test dataset:</h3>\n<ul>\n<li>After training has run for a while, process some of the validation/test set with the model, and listen to output</li>\n<li>It should sound pretty similar to the target is the loss is in the region of 0.03 or so.</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
