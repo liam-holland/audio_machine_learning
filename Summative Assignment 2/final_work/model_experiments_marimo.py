@@ -21,6 +21,7 @@ def _():
     import sklearn
     import torch
     import seaborn as sns
+    import marimo as mo
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.linear_model import LogisticRegression
     from sklearn.manifold import TSNE
@@ -46,6 +47,7 @@ def _():
         hashlib,
         json,
         librosa,
+        mo,
         nn,
         numpy,
         pandas,
@@ -344,13 +346,13 @@ def _(
     #     "max_iter": 2000,
     # }
 
-    # MODEL_NAME = "mlp"
-    # MODEL_KWARGS = {
-    #     "hidden_layer_sizes": (64, 32),
-    #     "alpha": 1e-4,
-    #     "max_iter": 500,
-    #     "early_stopping": True,
-    # }
+    MODEL_NAME = "mlp"
+    MODEL_KWARGS = {
+        "hidden_layer_sizes": (64, 32),
+        "alpha": 1e-4,
+        "max_iter": 500,
+        "early_stopping": True,
+    }
 
     # MODEL_NAME = "random_forest"
     # MODEL_KWARGS = {
@@ -359,12 +361,12 @@ def _(
     #     "min_samples_leaf": 5,
     # }
 
-    MODEL_NAME = "svm"
-    MODEL_KWARGS = {
-        "kernel": "rbf",
-        "C": 1.0,
-        "gamma": "scale",
-    }
+    # MODEL_NAME = "svm"
+    # MODEL_KWARGS = {
+    #     "kernel": "rbf",
+    #     "C": 1.0,
+    #     "gamma": "scale",
+    # }
 
     run = train_and_evaluate(
         model_name=MODEL_NAME,
@@ -413,9 +415,6 @@ def _(run):
 
 @app.cell
 def _(MODEL_NAME, class_names, confusion_matrix, plt, run, sns):
-    # import matplotlib.pyplot as plt
-    # import seaborn as sns
-    # from sklearn.metrics import confusion_matrix
 
     classes = class_names 
 
@@ -794,7 +793,7 @@ def _(
 
             feature_values = {}
             for feature_set in aux_feature_sets:
-                feature_values.update(HYBRID_AUX_FEATURE_BUILDERS[feature_set](y=y, sr=sample_rate))
+                feature_values.upandasate(HYBRID_AUX_FEATURE_BUILDERS[feature_set](y=y, sr=sample_rate))
 
             aux_names = list(feature_values.keys())
             aux_vector = numpy.asarray([feature_values[name] for name in aux_names], dtype=numpy.float32)
@@ -938,7 +937,7 @@ def _(
                 if feature_set not in HYBRID_AUX_FEATURE_BUILDERS:
                     available = ", ".join(sorted(HYBRID_AUX_FEATURE_BUILDERS))
                     raise ValueError(f"Unknown aux_feature_set '{feature_set}'. Available: {available}")
-                feature_values.update(HYBRID_AUX_FEATURE_BUILDERS[feature_set](y=y, sr=self.sample_rate))
+                feature_values.upandasate(HYBRID_AUX_FEATURE_BUILDERS[feature_set](y=y, sr=self.sample_rate))
 
             feature_names = list(feature_values.keys())
             aux_vector = self._sanitize_aux_vector([feature_values[name] for name in feature_names])
@@ -1392,7 +1391,7 @@ def _(
                     model_variant=resolved_model_variant,
                 )
 
-                row.update({
+                row.upandasate({
                     "val_loss": val_metrics["loss"],
                     "val_accuracy": val_metrics["accuracy"],
                     "val_macro_f1": val_metrics["macro_f1"],
@@ -1598,17 +1597,309 @@ def _(
         fig, ax = plot_hybrid_tsne(tsne_df, label_col=label_col, title=resolved_title)
         return tsne_df, fig, ax
 
-    return plot_hybrid_tsne_for_run, train_mel_cnn
+    return (
+        HybridMelSpectrogramCNN,
+        MelSpectrogramDataset,
+        plot_hybrid_tsne_for_run,
+        train_mel_cnn,
+    )
 
 
 @app.cell
-def _(LABEL_COL, new_df_split, train_mel_cnn):
+def _(HybridMelSpectrogramCNN, MelSpectrogramDataset, torch):
+    def load_and_initialize_model(test_df, label_encoder, weights_path="best_hybrid_cnn.pth"):
+        # 1. Configuration (Must match your training settings)
+        dataset_kwargs = {
+            "audio_col": "new_file_path",
+            "label_col": "label",
+            "sample_rate": 22050,
+            "fixed_duration": 3.0,
+            "n_mels": 128,
+            "n_fft": 1024,
+            "hop_length": 256,
+            "power": 2.0,
+            "normalize": "per_sample",
+            "aux_feature_sets": ("rms_stats", "spectral_flatness"),
+            "cache_dir": "mel_cache_v1",
+            "use_disk_cache": True,
+        }
+
+        # 2. Use the test_df to infer shapes
+        dataset = MelSpectrogramDataset(test_df, **dataset_kwargs)
+        mel, aux, _ = dataset[0]
+    
+        num_classes = len(label_encoder.classes_)
+        aux_feature_dim = len(aux)
+
+        # 3. Build Architecture
+        model = HybridMelSpectrogramCNN(
+            num_classes=num_classes,
+            aux_feature_dim=aux_feature_dim,
+        )
+
+        # 4. Initialise LazyLinear layers with a dummy forward pass
+        model.eval()
+        with torch.no_grad():
+            _ = model(mel.unsqueeze(0), aux.unsqueeze(0))
+
+        # 5. Load Weights
+        state_dict = torch.load(weights_path, map_location="cpu")
+        model.load_state_dict(state_dict)
+    
+        return model, dataset_kwargs
+
+    return (load_and_initialize_model,)
+
+
+@app.cell
+def _(
+    DataLoader,
+    MelSpectrogramDataset,
+    confusion_matrix,
+    numpy,
+    pandas,
+    plot_hybrid_tsne_for_run,
+    plt,
+    sns,
+    torch,
+):
+    def get_model_predictions(model, test_df, dataset_kwargs):
+        test_dataset = MelSpectrogramDataset(test_df, **dataset_kwargs)
+        test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+    
+        all_preds = []
+        all_true = []
+    
+        model.eval()
+        with torch.no_grad():
+            for xb, auxb, yb in test_loader:
+                logits = model(xb, auxb)
+                preds = torch.argmax(logits, dim=1)
+            
+                all_preds.extend(preds.cpu().numpy())
+                all_true.extend(yb.cpu().numpy())
+            
+        return all_true, all_preds
+
+    def plot_confusion_matrix(y_true, y_pred, class_names):
+        # Create basic confusion matrix
+        cm = confusion_matrix(y_true, y_pred)
+        cm_df = pandas.DataFrame(cm, index=class_names, columns=class_names)
+    
+        # Calculate percentage (Normalized by True Labels)
+        cm_perc = cm_df.div(cm_df.sum(axis=1), axis=0).fillna(0)
+
+        # Create multi-line label: raw count + percentage
+        annot_labels = numpy.array([
+            [f"{int(count)}\n({perc:.1%})" for count, perc in zip(row_counts, row_percs)]
+            for row_counts, row_percs in zip(cm_df.values, cm_perc.values)
+        ])
+
+        plt.figure(figsize=(10, 7))
+        sns.set_theme(style="white")
+    
+        ax = sns.heatmap(
+            cm_perc, 
+            annot=annot_labels, 
+            fmt="", 
+            cmap='Blues', 
+            xticklabels=class_names, 
+            yticklabels=class_names,
+            square=True,
+            linewidths=.5,
+            cbar_kws={"shrink": .8}
+        )
+
+        plt.title("Hybrid CNN - Test Confusion Matrix\n(Mel + Physical Features)", 
+                  pad=20, fontsize=15, fontweight='bold')
+        plt.ylabel('True Label', fontsize=12, fontweight='bold')
+        plt.xlabel('Predicted Label', fontsize=12, fontweight='bold')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+
+        plt.savefig(f'./images/Hybrid CNN - Test Confusion Matrix.png', bbox_inches='tight')
+    
+        return plt.gcf()
+
+    def generate_tsne_visual(model, test_df, dataset_kwargs, class_names):
+        # This uses your existing 'plot_hybrid_tsne_for_run' logic
+        run_context = {
+            "model_name": "hybrid_cnn",
+            "model": model,
+            "prepared_splits": {"test_df": test_df},
+            "dataset_kwargs": dataset_kwargs,
+            "class_names": class_names
+        }
+    
+        tsne_df, fig, ax = plot_hybrid_tsne_for_run(
+            run_context, split_name="test", perplexity=30
+        )
+
+        fig.savefig(f'./images/Hybrid CNN - TSNE.png', bbox_inches='tight')
+    
+        return fig
+
+    return generate_tsne_visual, get_model_predictions, plot_confusion_matrix
+
+
+@app.cell
+def _(
+    generate_tsne_visual,
+    get_model_predictions,
+    label_encoder,
+    load_and_initialize_model,
+    plot_confusion_matrix,
+    test_df,
+):
+    # Assuming test_df and label_encoder are already loaded in your notebook
+    _model_, dataset_kwargs = load_and_initialize_model(test_df, label_encoder)
+    _class_names_ = list(label_encoder.classes_)
+
+    # 1. Generate Prediction Data
+    y_true, y_pred = get_model_predictions(_model_, test_df, dataset_kwargs)
+
+    # 2. Create Plots
+    cm_fig = plot_confusion_matrix(y_true, y_pred, _class_names_)
+    tsne_fig = generate_tsne_visual(_model_, test_df, dataset_kwargs, _class_names_)
+
+    return cm_fig, tsne_fig
+
+
+@app.cell
+def _(cm_fig, mo, tsne_fig):
+    mo.vstack([
+        mo.md("### Visual Performance Report"),
+        cm_fig,
+        tsne_fig
+    ])
+    return
+
+
+@app.cell(disabled=True)
+def _(
+    HybridMelSpectrogramCNN,
+    MelSpectrogramDataset,
+    label_encoder,
+    torch,
+    train_df,
+):
+    def run_trained_model():
+        # 1. Load weights
+        state_dict = torch.load("best_hybrid_cnn.pth", map_location="cpu")
+
+        dataset_kwargs = {
+        "audio_col": "new_file_path",
+        "label_col": "label",
+        "sample_rate": 22050,
+        "fixed_duration": 3.0,
+        "n_mels": 128,
+        "n_fft": 1024,
+        "hop_length": 256,
+        "power": 2.0,
+        "normalize": "per_sample",
+        "aux_feature_sets": ("rms_stats", "spectral_flatness"),
+        "cache_dir": "mel_cache_v1",
+        "use_disk_cache": True,
+        }
+
+        # 2. Build dataset (must match training config)
+        dataset = MelSpectrogramDataset(train_df, **dataset_kwargs)
+
+        # 3. Get sample to infer aux_feature_dim
+        mel, aux, _ = dataset[0]
+
+        num_classes = len(label_encoder.classes_)
+        aux_feature_dim = len(aux)
+
+        # 4. Create model
+        model = HybridMelSpectrogramCNN(
+            num_classes=num_classes,
+            aux_feature_dim=aux_feature_dim,
+        )
+
+        # 5. IMPORTANT: initialise LazyLinear
+        model.eval()
+        with torch.no_grad():
+            _ = model(mel.unsqueeze(0), aux.unsqueeze(0))
+
+        # 6. Load weights
+        model.load_state_dict(state_dict)
+        return model.eval()
+
+
+    run_trained_model()
+    return
+
+
+@app.cell
+def _(MEL_CNN_CONFIG, confusion_plots_, mel_cnn_test_cm_df, numpy, plt, sns):
+    def confusion_plots():
+        # Extract data directly from the mel_cnn_test_cm_df file
+        cm_df = mel_cnn_test_cm_df.copy()
+        classes = cm_df.index.tolist()
+
+        # Calculate percentage (Normalized by True Labels)
+        cm_perc = cm_df.div(cm_df.sum(axis=1), axis=0)
+
+        # Draw heat map
+        plt.figure(figsize=(10, 7))
+        sns.set_theme(style="white")
+
+        # Create label text: raw number + percentage
+        # Iterate through the values ​​in the DataFrame to generate labels
+        annot_labels = []
+        for i in range(len(cm_df)):
+            row_labels = []
+            for j in range(len(cm_df)):
+                count = cm_df.iloc[i, j]
+                perc = cm_perc.iloc[i, j]
+                row_labels.append(f"{int(count)}\n({perc:.1%})")
+            annot_labels.append(row_labels)
+        annot_labels = numpy.array(annot_labels)
+
+        # Heatmap
+        ax = sns.heatmap(cm_perc, 
+                         annot=annot_labels, 
+                         fmt="", 
+                         cmap='Blues', 
+                         xticklabels=classes, 
+                         yticklabels=classes,
+                         square=True,
+                         linewidths=.5,
+                         cbar_kws={"shrink": .8})
+
+        # Automatically assign titles
+        model_type = MEL_CNN_CONFIG.get("model_variant", "cnn").upper()
+        title_desc = "(Mel + Physical Features)" if model_type == "HYBRID" else "(Mel-Spectrogram Only)"
+
+        plt.title(f"CNN {model_type} - Test Confusion Matrix\n{title_desc}", 
+                  pad=20, fontsize=15, fontweight='bold')
+        plt.ylabel('True Label', fontsize=12, fontweight='bold')
+        plt.xlabel('Predicted Label', fontsize=12, fontweight='bold')
+
+        plt.xticks(rotation=45)
+        plt.yticks(rotation=0)
+        plt.tight_layout()
+        return plt.show()
+
+
+    confusion_plots_()
+    return
+
+
+@app.cell(disabled=True)
+def _():
     MEL_CNN_CONFIG = {'sample_rate': 22050, 'fixed_duration': 3.0, 'n_mels': 128, 'n_fft': 1024, 'hop_length': 256, 'power': 2.0, 'normalize': 'per_sample', 'model_variant': 'hybrid', 'aux_feature_sets': ('rms_stats', 'spectral_flatness'), 'aux_clip_value': 5.0, 'batch_size': 32, 'num_epochs': 200, 'validation_every_n_epochs': 5, 'learning_rate': 0.001, 'weight_decay': 0.0001, 'lr_scheduler_name': 'reduce_on_plateau', 'lr_scheduler_monitor': 'val_macro_f1', 'best_model_monitor': 'val_macro_f1', 'lr_scheduler_kwargs': {'factor': 0.5, 'patience': 2, 'min_lr': 1e-06}, 'dropout': 0.3, 'cache_spectrograms': True, 'num_workers': 0, 'cache_dir': 'mel_cache_v1', 'use_disk_cache': True, 'precompute_cache': True}
+    return (MEL_CNN_CONFIG,)
+
+
+@app.cell(disabled=True)
+def _(LABEL_COL, MEL_CNN_CONFIG, new_df_split, train_mel_cnn):
     mel_cnn_run = train_mel_cnn(new_df_split, audio_col='new_file_path', split_col='split', label_source_col=LABEL_COL, **MEL_CNN_CONFIG)
     return (mel_cnn_run,)
 
 
-@app.cell
+@app.cell(disabled=True)
 def _(mel_cnn_run):
     mel_cnn_model = mel_cnn_run["model"]
     mel_cnn_model_variant = mel_cnn_run["model_name"]
@@ -1626,7 +1917,7 @@ def _(mel_cnn_run):
     return
 
 
-@app.cell
+@app.cell(disabled=True, hide_code=True)
 def _(mel_cnn_run):
     mel_cnn_train_cm_df = mel_cnn_run["confusion_matrices"]["train"]
     mel_cnn_val_cm_df = mel_cnn_run["confusion_matrices"]["val"]
@@ -1640,10 +1931,10 @@ def _(mel_cnn_run):
 
     print("\nMel CNN test confusion matrix")
     print(mel_cnn_test_cm_df)
-    return
+    return (mel_cnn_test_cm_df,)
 
 
-@app.cell
+@app.cell(disabled=True)
 def _(mel_cnn_run, plot_hybrid_tsne_for_run):
     # Quick t-SNE plot of the hybrid representation.
     MEL_CNN_TSNE_CONFIG = {
