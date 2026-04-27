@@ -26,7 +26,7 @@ def _():
 @app.cell
 def _(os):
     # Get a list of the files on my drive
-    file_list = os.listdir(r"C:\Users\Liam Holland\Documents\GitHub\audio_machine_learning\Summative Assignment 2\final_work\Medley-solos-DB")
+    file_list = os.listdir(r"./Medley-solos-DB")
     return (file_list,)
 
 
@@ -125,7 +125,6 @@ def _(numpy, pathlib, pb, shutil):
     EFFECT_BIN_LABELS = ("low", "mid", "high")
     EFFECT_SAMPLING_SEED = 42
     effect_rng = numpy.random.default_rng(EFFECT_SAMPLING_SEED)
-
 
     EFFECT_GENERATION_CONFIG = {
         "reverb": {
@@ -240,7 +239,6 @@ def _(numpy, pathlib, pb, shutil):
 
 
     def applyEffect(effect_name, df_row, folder_output, effect_settings=None, bin_label=None):
-        # file_path = pathlib.Path("/Users/gleborlov/Downloads") / df_row["file_path"].lstrip("./")
         file_path = pathlib.Path(df_row["file_path"])
         output_dir = pathlib.Path(folder_output)
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -292,12 +290,6 @@ def _(numpy, pathlib, pb, shutil):
             return []
 
     return EFFECT_BIN_LABELS, applyEffect, sample_effect_settings
-
-
-@app.cell
-def _(df_row, pathlib):
-    file_path = pathlib.Path("/Users/gleborlov/Downloads") / df_row["file_path"].lstrip("./")
-    return
 
 
 @app.cell

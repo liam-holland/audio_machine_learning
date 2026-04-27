@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.20.4"
-app = marimo.App()
+app = marimo.App(auto_download=["ipynb"])
 
 
 @app.cell
@@ -20,6 +20,7 @@ def _():
     import pandas
     import sklearn
     import torch
+    import seaborn as sns
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.linear_model import LogisticRegression
     from sklearn.manifold import TSNE
@@ -51,9 +52,16 @@ def _():
         pathlib,
         plt,
         sklearn,
+        sns,
         time,
         torch,
     )
+
+
+@app.cell
+def _():
+    LABEL_COL = "effect_applied"
+    return (LABEL_COL,)
 
 
 @app.cell
@@ -104,7 +112,7 @@ def _(new_df_split):
 
 
 @app.cell
-def _(feature_df, pandas):
+def _(LABEL_COL, feature_df, pandas):
     # Prefer the generation-time split and keep only numeric feature columns.
     split_col = "split" if "split" in feature_df.columns else "test_train_val"
 
@@ -123,8 +131,13 @@ def _(feature_df, pandas):
         "test_train_val",
     }
 
-    if "effect" not in feature_df.columns:
-        feature_df["effect"] = feature_df["new_file_path"].astype(str).str.lstrip("./").str.split("/").str[0]
+    # if "effect" not in feature_df.columns:
+    #     feature_df["effect"] = feature_df["new_file_path"].astype(str).str.lstrip("./").str.split("/").str[0]
+
+    feature_df["effect"] = feature_df[LABEL_COL]
+
+    if feature_df["effect"].isna().any():
+        raise ValueError("Missing values in effect_applied — labels are broken.")
 
     feature_cols = [
         c for c in feature_df.columns
@@ -139,6 +152,8 @@ def _(feature_df, pandas):
 def _(feature_df, sklearn, split_col):
     # Encode labels
     label_encoder = sklearn.preprocessing.LabelEncoder()
+
+    print("Unique labels:", feature_df["effect"].unique())
     feature_df["label"] = label_encoder.fit_transform(feature_df["effect"])
 
     # Split
@@ -305,6 +320,13 @@ def _(
 
 
 @app.cell
+def _(new_df_split):
+    print(new_df_split["effect_applied"].isna().sum())
+    print(new_df_split["effect_applied"].unique())
+    return
+
+
+@app.cell
 def _(
     X_test,
     X_train,
@@ -316,18 +338,19 @@ def _(
     y_val,
 ):
     # Change these to try a different tabular model.
+
     # MODEL_NAME = "logistic_regression"
     # MODEL_KWARGS = {
     #     "max_iter": 2000,
     # }
 
-    MODEL_NAME = "mlp"
-    MODEL_KWARGS = {
-        "hidden_layer_sizes": (64, 32),
-        "alpha": 1e-4,
-        "max_iter": 500,
-        "early_stopping": True,
-    }
+    # MODEL_NAME = "mlp"
+    # MODEL_KWARGS = {
+    #     "hidden_layer_sizes": (64, 32),
+    #     "alpha": 1e-4,
+    #     "max_iter": 500,
+    #     "early_stopping": True,
+    # }
 
     # MODEL_NAME = "random_forest"
     # MODEL_KWARGS = {
@@ -336,12 +359,12 @@ def _(
     #     "min_samples_leaf": 5,
     # }
 
-    # MODEL_NAME = "svm"
-    # MODEL_KWARGS = {
-    #     "kernel": "rbf",
-    #     "C": 1.0,
-    #     "gamma": "scale",
-    # }
+    MODEL_NAME = "svm"
+    MODEL_KWARGS = {
+        "kernel": "rbf",
+        "C": 1.0,
+        "gamma": "scale",
+    }
 
     run = train_and_evaluate(
         model_name=MODEL_NAME,
@@ -354,7 +377,7 @@ def _(
         label_encoder=label_encoder,
         **MODEL_KWARGS,
     )
-    return (run,)
+    return MODEL_NAME, run
 
 
 @app.cell
@@ -368,7 +391,7 @@ def _(run):
     history_df = run["history_df"]
 
     history_df
-    return
+    return (class_names,)
 
 
 @app.cell
@@ -389,9 +412,57 @@ def _(run):
 
 
 @app.cell
+def _(MODEL_NAME, class_names, confusion_matrix, plt, run, sns):
+    # import matplotlib.pyplot as plt
+    # import seaborn as sns
+    # from sklearn.metrics import confusion_matrix
+
+    classes = class_names 
+
+    # Extract the most accurate data from your run variables.
+    y_true_test = run["metrics"]["test"]["y_true"]
+    y_pred_test = run["metrics"]["test"]["y_pred"]
+
+    # Calculate confusion matrix
+    cm = confusion_matrix(y_true_test, y_pred_test)
+
+    # Plotting heatmap
+    plt.figure(figsize=(10, 6))
+    sns.set_theme(style="white")
+
+    ax = sns.heatmap(cm, 
+                     annot=True,               # Display numbers
+                     fmt='d',                  # Interger format
+                     cmap='Blues',             # Blue tint
+                     xticklabels=classes,      # xlabel
+                     yticklabels=classes,      # ylabel
+                     square=True,              # Square
+                     linewidths=.5,            # Grid line width
+                     cbar_kws={"shrink": .8})  # Sidebar scaling
+
+    title = f"{MODEL_NAME.upper()} - Test Confusion Matrix"
+
+    plt.title(title, pad=20, fontsize=16, fontweight='bold')
+    plt.ylabel('True Label', fontsize=12, fontweight='bold')
+    plt.xlabel('Predicted Label', fontsize=12, fontweight='bold')
+
+    # Optimize visual presentation
+    plt.xticks(rotation=45)
+    plt.yticks(rotation=0)
+
+    plt.savefig(f'./images/{title}.png', bbox_inches='tight')
+
+    plt.tight_layout()
+    plt.show()
+
+    return
+
+
+@app.cell(hide_code=True)
 def _(
     DataLoader,
     Dataset,
+    LABEL_COL,
     TSNE,
     accuracy_score,
     confusion_matrix,
@@ -418,10 +489,19 @@ def _(
     print("mel_cnn_device =", mel_cnn_device)
 
 
-    def infer_audio_label(row, audio_col="new_file_path", label_source_col="effect_applied"):
-        if label_source_col in row.index and pandas.notna(row[label_source_col]):
-            return str(row[label_source_col])
-        return pathlib.Path(str(row[audio_col])).parts[0]
+    # def infer_audio_label(row, audio_col="new_file_path", label_source_col="effect_applied"):
+    #     if label_source_col in row.index and pandas.notna(row[label_source_col]):
+    #         return str(row[label_source_col])
+    #     return pathlib.Path(str(row[audio_col])).parts[0]
+
+    def infer_audio_label(row, audio_col="new_file_path", label_source_col=LABEL_COL):
+        if label_source_col not in row.index:
+            raise ValueError("effect_applied column missing")
+
+        if pandas.isna(row[label_source_col]):
+            raise ValueError(f"Missing label for {row[audio_col]}")
+
+        return str(row[label_source_col])
 
 
     def normalize_aux_feature_sets(aux_feature_sets):
@@ -1125,7 +1205,7 @@ def _(
         dataframe,
         audio_col="new_file_path",
         split_col="split",
-        label_source_col="effect_applied",
+        label_source_col=LABEL_COL,
         model_variant="hybrid",
         sample_rate=22050,
         fixed_duration=3.0,
@@ -1522,9 +1602,9 @@ def _(
 
 
 @app.cell
-def _(new_df_split, train_mel_cnn):
+def _(LABEL_COL, new_df_split, train_mel_cnn):
     MEL_CNN_CONFIG = {'sample_rate': 22050, 'fixed_duration': 3.0, 'n_mels': 128, 'n_fft': 1024, 'hop_length': 256, 'power': 2.0, 'normalize': 'per_sample', 'model_variant': 'hybrid', 'aux_feature_sets': ('rms_stats', 'spectral_flatness'), 'aux_clip_value': 5.0, 'batch_size': 32, 'num_epochs': 200, 'validation_every_n_epochs': 5, 'learning_rate': 0.001, 'weight_decay': 0.0001, 'lr_scheduler_name': 'reduce_on_plateau', 'lr_scheduler_monitor': 'val_macro_f1', 'best_model_monitor': 'val_macro_f1', 'lr_scheduler_kwargs': {'factor': 0.5, 'patience': 2, 'min_lr': 1e-06}, 'dropout': 0.3, 'cache_spectrograms': True, 'num_workers': 0, 'cache_dir': 'mel_cache_v1', 'use_disk_cache': True, 'precompute_cache': True}
-    mel_cnn_run = train_mel_cnn(new_df_split, audio_col='new_file_path', split_col='split', label_source_col='effect_applied', **MEL_CNN_CONFIG)
+    mel_cnn_run = train_mel_cnn(new_df_split, audio_col='new_file_path', split_col='split', label_source_col=LABEL_COL, **MEL_CNN_CONFIG)
     return (mel_cnn_run,)
 
 
