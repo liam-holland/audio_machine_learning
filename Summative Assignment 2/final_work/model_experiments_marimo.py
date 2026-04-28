@@ -22,6 +22,7 @@ def _():
     import torch
     import seaborn as sns
     import marimo as mo
+    import warnings
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.linear_model import LogisticRegression
     from sklearn.manifold import TSNE
@@ -50,6 +51,7 @@ def _():
         mo,
         nn,
         numpy,
+        os,
         pandas,
         pathlib,
         plt,
@@ -57,6 +59,7 @@ def _():
         sns,
         time,
         torch,
+        warnings,
     )
 
 
@@ -333,127 +336,128 @@ def _(
     X_test,
     X_train,
     X_val,
+    confusion_matrix,
     label_encoder,
+    numpy,
+    os,
+    plt,
+    sns,
     train_and_evaluate,
+    warnings,
     y_test,
     y_train,
     y_val,
 ):
-    # Change these to try a different tabular model.
+    warnings.filterwarnings("ignore", category=UserWarning, module="sklearn.utils.parallel")
 
-    # MODEL_NAME = "logistic_regression"
-    # MODEL_KWARGS = {
-    #     "max_iter": 2000,
-    # }
-
-    MODEL_NAME = "mlp"
-    MODEL_KWARGS = {
-        "hidden_layer_sizes": (64, 32),
-        "alpha": 1e-4,
-        "max_iter": 500,
-        "early_stopping": True,
+    # 1. Define the models and their specific hyperparameters
+    models_to_run = {
+        "logistic_regression": {"max_iter": 2000},
+        "mlp": {
+            "hidden_layer_sizes": (64, 32),
+            "alpha": 1e-4,
+            "max_iter": 500,
+            "early_stopping": True,
+        },
+        "random_forest": {
+            "n_estimators": 200,
+            "max_depth": 12,
+            "min_samples_leaf": 5,
+        },
+        "svm": {
+            "kernel": "rbf",
+            "C": 1.0,
+            "gamma": "scale",
+        }
     }
 
-    # MODEL_NAME = "random_forest"
-    # MODEL_KWARGS = {
-    #     "n_estimators": 200,
-    #     "max_depth": 12,
-    #     "min_samples_leaf": 5,
-    # }
+    # Ensure the output directory exists
+    os.makedirs('./images', exist_ok=True)
 
-    # MODEL_NAME = "svm"
-    # MODEL_KWARGS = {
-    #     "kernel": "rbf",
-    #     "C": 1.0,
-    #     "gamma": "scale",
-    # }
+    # Define visual constants
+    CELL_TEXT_SIZE = 14
+    LABEL_SIZE = 16
+    TICK_SIZE = 14
+    TITLE_SIZE = 22
 
-    run = train_and_evaluate(
-        model_name=MODEL_NAME,
-        X_train=X_train,
-        y_train=y_train,
-        X_val=X_val,
-        y_val=y_val,
-        X_test=X_test,
-        y_test=y_test,
-        label_encoder=label_encoder,
-        **MODEL_KWARGS,
-    )
-    return MODEL_NAME, run
+    # 2. Iterate through each model
+    for model_name, model_kwargs in models_to_run.items():
+        print(f"\n" + "="*40)
+        print(f"RUNNING: {model_name.upper()}")
+        print("="*40)
+    
+        # Train and Evaluate
+        run = train_and_evaluate(
+            model_name=model_name,
+            X_train=X_train,
+            y_train=y_train,
+            X_val=X_val,
+            y_val=y_val,
+            X_test=X_test,
+            y_test=y_test,
+            label_encoder=label_encoder,
+            **model_kwargs,
+        )
 
+        # --- NEW: Print Detailed Accuracy Summary ---
+        m = run["metrics"]
+        print(f"\n--- {model_name.upper()} RESULTS ---")
+        print(f"Train Accuracy: {m['train']['accuracy']:.4f} | Macro F1: {m['train']['macro_f1']:.4f}")
+        print(f"Val Accuracy:   {m['val']['accuracy']:.4f} | Macro F1: {m['val']['macro_f1']:.4f}")
+        print(f"Test Accuracy:  {m['test']['accuracy']:.4f} | Macro F1: {m['test']['macro_f1']:.4f}")
+        print("-" * 30)
 
-@app.cell
-def _(run):
-    model = run["model"]
-    train_metrics = run["metrics"]["train"]
-    val_metrics = run["metrics"]["val"]
-    test_metrics = run["metrics"]["test"]
-    class_names = run["class_names"]
-    num_classes = len(class_names)
-    history_df = run["history_df"]
+        # 3. Data Preparation for Plotting
+        classes = run["class_names"]
+        y_true_test = run["metrics"]["test"]["y_true"]
+        y_pred_test = run["metrics"]["test"]["y_pred"]
+    
+        # Calculate Raw Confusion Matrix
+        cm = confusion_matrix(y_true_test, y_pred_test)
 
-    history_df
-    return (class_names,)
+        # Calculate Percentages
+        cm_sum = numpy.sum(cm, axis=1, keepdims=True)
+        cm_perc = numpy.divide(cm.astype(float), cm_sum, out=numpy.zeros_like(cm, dtype=float), where=cm_sum!=0)
 
+        # Create labels
+        annot_labels = numpy.array([
+            [f"{p:.1%}\n({int(c)})" for p, c in zip(row_p, row_c)] 
+            for row_p, row_c in zip(cm_perc, cm)
+        ])
 
-@app.cell
-def _(run):
-    train_cm_df = run["confusion_matrices"]["train"]
-    val_cm_df = run["confusion_matrices"]["val"]
-    test_cm_df = run["confusion_matrices"]["test"]
+        # 4. Plotting
+        fig, ax = plt.subplots(figsize=(12, 8))
+        sns.set_theme(style="white")
 
-    print("\nTrain confusion matrix")
-    print(train_cm_df)
+        ax = sns.heatmap(cm_perc, 
+                         annot=annot_labels, 
+                         fmt="",            
+                         cmap='Blues', 
+                         xticklabels=classes, 
+                         yticklabels=classes,
+                         square=True, 
+                         linewidths=.5, 
+                         cbar_kws={"shrink": .8},
+                         annot_kws={"size": CELL_TEXT_SIZE, "weight": "bold"}, 
+                         ax=ax)
 
-    print("\nValidation confusion matrix")
-    print(val_cm_df)
+        title = f"{model_name.upper()} - Test Confusion Matrix"
+    
+        ax.set_title(title, pad=30, fontsize=TITLE_SIZE, fontweight='bold')
+        ax.set_ylabel('True Label', fontsize=LABEL_SIZE, fontweight='bold')
+        ax.set_xlabel('Predicted Label', fontsize=LABEL_SIZE, fontweight='bold')
+        ax.tick_params(axis='both', which='major', labelsize=TICK_SIZE)
 
-    print("\nTest confusion matrix")
-    print(test_cm_df)
-    return
+        plt.xticks(rotation=45)
+        plt.yticks(rotation=0)
+        plt.tight_layout()
 
-
-@app.cell
-def _(MODEL_NAME, class_names, confusion_matrix, plt, run, sns):
-
-    classes = class_names 
-
-    # Extract the most accurate data from your run variables.
-    y_true_test = run["metrics"]["test"]["y_true"]
-    y_pred_test = run["metrics"]["test"]["y_pred"]
-
-    # Calculate confusion matrix
-    cm = confusion_matrix(y_true_test, y_pred_test)
-
-    # Plotting heatmap
-    plt.figure(figsize=(10, 6))
-    sns.set_theme(style="white")
-
-    ax = sns.heatmap(cm, 
-                     annot=True,               # Display numbers
-                     fmt='d',                  # Interger format
-                     cmap='Blues',             # Blue tint
-                     xticklabels=classes,      # xlabel
-                     yticklabels=classes,      # ylabel
-                     square=True,              # Square
-                     linewidths=.5,            # Grid line width
-                     cbar_kws={"shrink": .8})  # Sidebar scaling
-
-    title = f"{MODEL_NAME.upper()} - Test Confusion Matrix"
-
-    plt.title(title, pad=20, fontsize=16, fontweight='bold')
-    plt.ylabel('True Label', fontsize=12, fontweight='bold')
-    plt.xlabel('Predicted Label', fontsize=12, fontweight='bold')
-
-    # Optimize visual presentation
-    plt.xticks(rotation=45)
-    plt.yticks(rotation=0)
-
-    plt.savefig(f'./images/{title}.png', bbox_inches='tight')
-
-    plt.tight_layout()
-    plt.show()
-
+        # 5. Save and Close
+        file_name = f"./images/{model_name}_confustion_matrix.png"
+        plt.savefig(file_name, bbox_inches='tight', dpi=300)
+        plt.close()
+    
+        print(f"Successfully saved confusion matrix to: {file_name}")
     return
 
 
@@ -1627,7 +1631,7 @@ def _(HybridMelSpectrogramCNN, MelSpectrogramDataset, torch):
         # 2. Use the test_df to infer shapes
         dataset = MelSpectrogramDataset(test_df, **dataset_kwargs)
         mel, aux, _ = dataset[0]
-    
+
         num_classes = len(label_encoder.classes_)
         aux_feature_dim = len(aux)
 
@@ -1645,7 +1649,7 @@ def _(HybridMelSpectrogramCNN, MelSpectrogramDataset, torch):
         # 5. Load Weights
         state_dict = torch.load(weights_path, map_location="cpu")
         model.load_state_dict(state_dict)
-    
+
         return model, dataset_kwargs
 
     return (load_and_initialize_model,)
@@ -1655,7 +1659,9 @@ def _(HybridMelSpectrogramCNN, MelSpectrogramDataset, torch):
 def _(
     DataLoader,
     MelSpectrogramDataset,
+    accuracy_score,
     confusion_matrix,
+    f1_score,
     numpy,
     pandas,
     plot_hybrid_tsne_for_run,
@@ -1666,38 +1672,57 @@ def _(
     def get_model_predictions(model, test_df, dataset_kwargs):
         test_dataset = MelSpectrogramDataset(test_df, **dataset_kwargs)
         test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
-    
+
         all_preds = []
         all_true = []
-    
+
         model.eval()
         with torch.no_grad():
             for xb, auxb, yb in test_loader:
                 logits = model(xb, auxb)
                 preds = torch.argmax(logits, dim=1)
-            
+
                 all_preds.extend(preds.cpu().numpy())
                 all_true.extend(yb.cpu().numpy())
-            
+
         return all_true, all_preds
 
     def plot_confusion_matrix(y_true, y_pred, class_names):
-        # Create basic confusion matrix
-        cm = confusion_matrix(y_true, y_pred)
-        cm_df = pandas.DataFrame(cm, index=class_names, columns=class_names)
+        """
+        Plots high-res Heatmap and prints Accuracy/F1 metrics.
+        Uses numpy and pandas (full names).
+        """
+        # --- 1. Calculate and Print Accuracy Info ---
+        acc = accuracy_score(y_true, y_pred)
+        f1 = f1_score(y_true, y_pred, average='macro')
     
-        # Calculate percentage (Normalized by True Labels)
+        print("\n" + "="*40)
+        print("HYBRID CNN - TEST RESULTS")
+        print("="*40)
+        print(f"Test Accuracy: {acc:.4f}")
+        print(f"Test Macro F1: {f1:.4f}")
+        print("-" * 40)
+
+        # --- 2. Visual Setup ---
+        CELL_TEXT_SIZE = 14
+        LABEL_SIZE = 16
+        TICK_SIZE = 14
+        TITLE_SIZE = 22
+
+        cm = confusion_matrix(y_true, y_pred)
+        # Replaced pd with pandas
+        cm_df = pandas.DataFrame(cm, index=class_names, columns=class_names)
         cm_perc = cm_df.div(cm_df.sum(axis=1), axis=0).fillna(0)
 
-        # Create multi-line label: raw count + percentage
+        # Replaced np with numpy
         annot_labels = numpy.array([
-            [f"{int(count)}\n({perc:.1%})" for count, perc in zip(row_counts, row_percs)]
+            [f"{perc:.1%}\n({int(count)})" for count, perc in zip(row_counts, row_percs)]
             for row_counts, row_percs in zip(cm_df.values, cm_perc.values)
         ])
 
-        plt.figure(figsize=(10, 7))
+        plt.figure(figsize=(12, 9))
         sns.set_theme(style="white")
-    
+
         ax = sns.heatmap(
             cm_perc, 
             annot=annot_labels, 
@@ -1707,22 +1732,28 @@ def _(
             yticklabels=class_names,
             square=True,
             linewidths=.5,
-            cbar_kws={"shrink": .8}
+            cbar_kws={"shrink": .8},
+            annot_kws={"size": CELL_TEXT_SIZE, "weight": "bold"}
         )
 
-        plt.title("Hybrid CNN - Test Confusion Matrix\n(Mel + Physical Features)", 
-                  pad=20, fontsize=15, fontweight='bold')
-        plt.ylabel('True Label', fontsize=12, fontweight='bold')
-        plt.xlabel('Predicted Label', fontsize=12, fontweight='bold')
-        plt.xticks(rotation=45, ha='right')
-        plt.tight_layout()
-
-        plt.savefig(f'./images/Hybrid CNN - Test Confusion Matrix.png', bbox_inches='tight')
+        title_text = "Hybrid CNN - Test Confusion Matrix\n(Mel + Physical Features)"
+        plt.title(title_text, pad=30, fontsize=TITLE_SIZE, fontweight='bold')
+        plt.ylabel('True Label', fontsize=LABEL_SIZE, fontweight='bold')
+        plt.xlabel('Predicted Label', fontsize=LABEL_SIZE, fontweight='bold')
     
+        # Fix rotations
+        plt.xticks(rotation=45, ha='right', fontsize=TICK_SIZE)
+        plt.yticks(rotation=0, fontsize=TICK_SIZE) 
+    
+        plt.tight_layout()
+        plt.savefig(f'./images/{title_text.replace(chr(10), " ")}.png', bbox_inches='tight', dpi=300)
+
         return plt.gcf()
 
     def generate_tsne_visual(model, test_df, dataset_kwargs, class_names):
-        # This uses your existing 'plot_hybrid_tsne_for_run' logic
+        """
+        Generates and saves the t-SNE visualization with high-DPI for the report.
+        """
         run_context = {
             "model_name": "hybrid_cnn",
             "model": model,
@@ -1730,13 +1761,18 @@ def _(
             "dataset_kwargs": dataset_kwargs,
             "class_names": class_names
         }
-    
+
+        # Use your helper function to generate the plot
         tsne_df, fig, ax = plot_hybrid_tsne_for_run(
             run_context, split_name="test", perplexity=30
         )
 
-        fig.savefig(f'./images/Hybrid CNN - TSNE.png', bbox_inches='tight')
+        # Apply same high-DPI save logic
+        file_path = './images/Hybrid CNN - TSNE.png'
+        fig.savefig(file_path, bbox_inches='tight', dpi=300)
     
+        print(f"Saved t-SNE plot to: {file_path}")
+
         return fig
 
     return generate_tsne_visual, get_model_predictions, plot_confusion_matrix
@@ -1744,24 +1780,34 @@ def _(
 
 @app.cell
 def _(
-    generate_tsne_visual,
     get_model_predictions,
     label_encoder,
     load_and_initialize_model,
-    plot_confusion_matrix,
     test_df,
 ):
     # Assuming test_df and label_encoder are already loaded in your notebook
-    _model_, dataset_kwargs = load_and_initialize_model(test_df, label_encoder)
-    _class_names_ = list(label_encoder.classes_)
+    model_final, dataset_kwargs = load_and_initialize_model(test_df, label_encoder)
+    class_names_final = list(label_encoder.classes_)
 
     # 1. Generate Prediction Data
-    y_true, y_pred = get_model_predictions(_model_, test_df, dataset_kwargs)
+    y_true, y_pred = get_model_predictions(model_final, test_df, dataset_kwargs)
+    return class_names_final, dataset_kwargs, model_final, y_pred, y_true
 
+
+@app.cell
+def _(
+    class_names_final,
+    dataset_kwargs,
+    generate_tsne_visual,
+    model_final,
+    plot_confusion_matrix,
+    test_df,
+    y_pred,
+    y_true,
+):
     # 2. Create Plots
-    cm_fig = plot_confusion_matrix(y_true, y_pred, _class_names_)
-    tsne_fig = generate_tsne_visual(_model_, test_df, dataset_kwargs, _class_names_)
-
+    cm_fig = plot_confusion_matrix(y_true, y_pred, class_names_final)
+    tsne_fig = generate_tsne_visual(model_final, test_df, dataset_kwargs, class_names_final)
     return cm_fig, tsne_fig
 
 
@@ -1831,7 +1877,7 @@ def _(
     return
 
 
-@app.cell
+@app.cell(disabled=True)
 def _(MEL_CNN_CONFIG, confusion_plots_, mel_cnn_test_cm_df, numpy, plt, sns):
     def confusion_plots():
         # Extract data directly from the mel_cnn_test_cm_df file

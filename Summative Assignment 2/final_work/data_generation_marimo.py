@@ -24,6 +24,18 @@ def _():
 
 
 @app.cell
+def _(pandas):
+    feature_df_read = pandas.read_csv(filepath_or_buffer=r"feature_df.csv")
+    return (feature_df_read,)
+
+
+@app.cell
+def _(feature_df_read):
+    feature_df_read
+    return
+
+
+@app.cell
 def _(os):
     # Get a list of the files on my drive
     file_list = os.listdir(r"./Medley-solos-DB")
