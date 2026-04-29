@@ -182,7 +182,7 @@ def _(feature_cols, sklearn, test_df, train_df, val_df):
     return X_test, X_train, X_val, y_test, y_train, y_val
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(
     LogisticRegression,
     MLPClassifier,
@@ -1004,8 +1004,10 @@ def _(
             if self.aux_feature_names is None:
                 self.aux_feature_names = feature_names
 
+            instr_id = row['instrument']
+
             label_tensor = torch.tensor(int(row[self.label_col]), dtype=torch.long)
-            return mel_tensor, aux_tensor, label_tensor
+            return mel_tensor, aux_tensor, label_tensor, instr_id
 
         def __getitem__(self, index):
             if self._cache is not None and index in self._cache:
@@ -1519,7 +1521,7 @@ def _(
 
         feature_rows = []
         with torch.no_grad():
-            for xb, auxb, yb in dataloader:
+            for xb, auxb, yb, _ in dataloader:
                 xb = xb.to(mel_cnn_device)
                 auxb = auxb.to(mel_cnn_device)
                 embedding, combined = model.encode_with_aux(xb, auxb)
@@ -1630,7 +1632,7 @@ def _(HybridMelSpectrogramCNN, MelSpectrogramDataset, torch):
 
         # 2. Use the test_df to infer shapes
         dataset = MelSpectrogramDataset(test_df, **dataset_kwargs)
-        mel, aux, _ = dataset[0]
+        mel, aux, _, instr = dataset[0]
 
         num_classes = len(label_encoder.classes_)
         aux_feature_dim = len(aux)
@@ -1675,17 +1677,19 @@ def _(
 
         all_preds = []
         all_true = []
+        all_instr = []
 
         model.eval()
         with torch.no_grad():
-            for xb, auxb, yb in test_loader:
+            for xb, auxb, yb, instr_ids in test_loader:
                 logits = model(xb, auxb)
                 preds = torch.argmax(logits, dim=1)
 
                 all_preds.extend(preds.cpu().numpy())
                 all_true.extend(yb.cpu().numpy())
+                all_instr.extend(instr_ids)
 
-        return all_true, all_preds
+        return all_true, all_preds, all_instr
 
     def plot_confusion_matrix(y_true, y_pred, class_names):
         """
@@ -1779,6 +1783,70 @@ def _(
 
 
 @app.cell
+def _(pandas, plt, sns):
+    def plot_instrument_accuracy(y_true, y_pred, instruments):
+        """
+        Calculates accuracy per instrument and generates a bar chart using full pandas namespace.
+        """
+        # 1. Create DataFrame
+        df_results = pandas.DataFrame({
+            'true': y_true,
+            'pred': y_pred,
+            'instrument': instruments
+        })
+
+        # 2. Calculate accuracy
+        df_results['is_correct'] = (df_results['true'] == df_results['pred'])
+    
+        # Group and calculate mean (accuracy), then convert to percentage
+        instrument_perf = (
+            df_results.groupby('instrument')['is_correct']
+            .mean()
+            .sort_values(ascending=False)
+            .reset_index()
+        )
+        instrument_perf['accuracy_pct'] = instrument_perf['is_correct'] * 100
+
+        # 3. Plotting
+        plt.figure(figsize=(10, 6))
+        sns.set_style("whitegrid")
+    
+        plot = sns.barplot(
+            data=instrument_perf, 
+            x='accuracy_pct', 
+            y='instrument', 
+            palette='viridis'
+        )
+    
+        # Add labels and title
+        plt.title('Classification Accuracy per Instrument', fontsize=15, pad=20)
+        plt.xlabel('Accuracy (%)', fontsize=12)
+        plt.ylabel('Instrument', fontsize=12)
+        plt.xlim(0, 105) 
+    
+        # Add text labels on the bars for precision
+        for i, p in enumerate(plot.patches):
+            width = p.get_width()
+            plt.text(
+                width + 1, 
+                p.get_y() + p.get_height()/2, 
+                f'{width:.1f}%', 
+                va='center'
+            )
+    
+        plt.tight_layout()
+
+        file_path = './images/Instrument - Accuracy.png'
+        plt.savefig(file_path, bbox_inches='tight', dpi=300)
+    
+        plt.show()
+    
+        return instrument_perf
+
+    return (plot_instrument_accuracy,)
+
+
+@app.cell
 def _(
     get_model_predictions,
     label_encoder,
@@ -1786,12 +1854,36 @@ def _(
     test_df,
 ):
     # Assuming test_df and label_encoder are already loaded in your notebook
-    model_final, dataset_kwargs = load_and_initialize_model(test_df, label_encoder)
+    model_final, dataset_kwargs = load_and_initialize_model(test_df, label_encoder,weights_path="best_hybrid_cnn.pth")
     class_names_final = list(label_encoder.classes_)
 
     # 1. Generate Prediction Data
-    y_true, y_pred = get_model_predictions(model_final, test_df, dataset_kwargs)
-    return class_names_final, dataset_kwargs, model_final, y_pred, y_true
+    y_true, y_pred, instruments = get_model_predictions(model_final, test_df, dataset_kwargs)
+    return (
+        class_names_final,
+        dataset_kwargs,
+        instruments,
+        model_final,
+        y_pred,
+        y_true,
+    )
+
+
+@app.cell
+def _(instruments, pandas, y_pred, y_true):
+    df_results = pandas.DataFrame({
+        'true': y_true,
+        'pred': y_pred,
+        'instrument': instruments
+    })
+
+    # Calculate accuracy per instrument
+    df_results['is_correct'] = df_results['true'] == df_results['pred']
+    instrument_perf = df_results.groupby('instrument')['is_correct'].mean().sort_values()
+
+    print("Accuracy by Instrument:")
+    print(instrument_perf)
+    return
 
 
 @app.cell
@@ -1799,8 +1891,10 @@ def _(
     class_names_final,
     dataset_kwargs,
     generate_tsne_visual,
+    instruments,
     model_final,
     plot_confusion_matrix,
+    plot_instrument_accuracy,
     test_df,
     y_pred,
     y_true,
@@ -1808,128 +1902,19 @@ def _(
     # 2. Create Plots
     cm_fig = plot_confusion_matrix(y_true, y_pred, class_names_final)
     tsne_fig = generate_tsne_visual(model_final, test_df, dataset_kwargs, class_names_final)
-    return cm_fig, tsne_fig
+
+    instrument_fig = plot_instrument_accuracy(y_true, y_pred, instruments )
+    return cm_fig, instrument_fig, tsne_fig
 
 
 @app.cell
-def _(cm_fig, mo, tsne_fig):
+def _(cm_fig, instrument_fig, mo, tsne_fig):
     mo.vstack([
         mo.md("### Visual Performance Report"),
         cm_fig,
-        tsne_fig
+        tsne_fig,
+        instrument_fig
     ])
-    return
-
-
-@app.cell(disabled=True)
-def _(
-    HybridMelSpectrogramCNN,
-    MelSpectrogramDataset,
-    label_encoder,
-    torch,
-    train_df,
-):
-    def run_trained_model():
-        # 1. Load weights
-        state_dict = torch.load("best_hybrid_cnn.pth", map_location="cpu")
-
-        dataset_kwargs = {
-        "audio_col": "new_file_path",
-        "label_col": "label",
-        "sample_rate": 22050,
-        "fixed_duration": 3.0,
-        "n_mels": 128,
-        "n_fft": 1024,
-        "hop_length": 256,
-        "power": 2.0,
-        "normalize": "per_sample",
-        "aux_feature_sets": ("rms_stats", "spectral_flatness"),
-        "cache_dir": "mel_cache_v1",
-        "use_disk_cache": True,
-        }
-
-        # 2. Build dataset (must match training config)
-        dataset = MelSpectrogramDataset(train_df, **dataset_kwargs)
-
-        # 3. Get sample to infer aux_feature_dim
-        mel, aux, _ = dataset[0]
-
-        num_classes = len(label_encoder.classes_)
-        aux_feature_dim = len(aux)
-
-        # 4. Create model
-        model = HybridMelSpectrogramCNN(
-            num_classes=num_classes,
-            aux_feature_dim=aux_feature_dim,
-        )
-
-        # 5. IMPORTANT: initialise LazyLinear
-        model.eval()
-        with torch.no_grad():
-            _ = model(mel.unsqueeze(0), aux.unsqueeze(0))
-
-        # 6. Load weights
-        model.load_state_dict(state_dict)
-        return model.eval()
-
-
-    run_trained_model()
-    return
-
-
-@app.cell(disabled=True)
-def _(MEL_CNN_CONFIG, confusion_plots_, mel_cnn_test_cm_df, numpy, plt, sns):
-    def confusion_plots():
-        # Extract data directly from the mel_cnn_test_cm_df file
-        cm_df = mel_cnn_test_cm_df.copy()
-        classes = cm_df.index.tolist()
-
-        # Calculate percentage (Normalized by True Labels)
-        cm_perc = cm_df.div(cm_df.sum(axis=1), axis=0)
-
-        # Draw heat map
-        plt.figure(figsize=(10, 7))
-        sns.set_theme(style="white")
-
-        # Create label text: raw number + percentage
-        # Iterate through the values ​​in the DataFrame to generate labels
-        annot_labels = []
-        for i in range(len(cm_df)):
-            row_labels = []
-            for j in range(len(cm_df)):
-                count = cm_df.iloc[i, j]
-                perc = cm_perc.iloc[i, j]
-                row_labels.append(f"{int(count)}\n({perc:.1%})")
-            annot_labels.append(row_labels)
-        annot_labels = numpy.array(annot_labels)
-
-        # Heatmap
-        ax = sns.heatmap(cm_perc, 
-                         annot=annot_labels, 
-                         fmt="", 
-                         cmap='Blues', 
-                         xticklabels=classes, 
-                         yticklabels=classes,
-                         square=True,
-                         linewidths=.5,
-                         cbar_kws={"shrink": .8})
-
-        # Automatically assign titles
-        model_type = MEL_CNN_CONFIG.get("model_variant", "cnn").upper()
-        title_desc = "(Mel + Physical Features)" if model_type == "HYBRID" else "(Mel-Spectrogram Only)"
-
-        plt.title(f"CNN {model_type} - Test Confusion Matrix\n{title_desc}", 
-                  pad=20, fontsize=15, fontweight='bold')
-        plt.ylabel('True Label', fontsize=12, fontweight='bold')
-        plt.xlabel('Predicted Label', fontsize=12, fontweight='bold')
-
-        plt.xticks(rotation=45)
-        plt.yticks(rotation=0)
-        plt.tight_layout()
-        return plt.show()
-
-
-    confusion_plots_()
     return
 
 
@@ -1977,7 +1962,7 @@ def _(mel_cnn_run):
 
     print("\nMel CNN test confusion matrix")
     print(mel_cnn_test_cm_df)
-    return (mel_cnn_test_cm_df,)
+    return
 
 
 @app.cell(disabled=True)

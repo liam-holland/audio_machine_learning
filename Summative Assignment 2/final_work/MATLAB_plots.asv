@@ -1,5 +1,62 @@
-[dry_audio, Fs_1] = audioread("./dry/dry_0a282672-c22c-59ff-faaa-ff9eb73fc8e6.wav");
+clear
+close all
 
-[delay_audio, Fs_2] = audioread("./delay/delay_0a282672-c22c-59ff-faaa-ff9eb73fc8e6.wav");
-
-spectrumAnalyzer(dry_audio,Fs_1)
+% [dry_audio, Fs_1] = audioread("./dry/dry_0a282672-c22c-59ff-faaa-ff9eb73fc8e6.wav");
+% 
+% [delay_audio, Fs_2] = audioread("./delay/delay_0a282672-c22c-59ff-faaa-ff9eb73fc8e6.wav");
+% [reverb_audio, Fs_3] = audioread("./reverb/reverb_0a282672-c22c-59ff-faaa-ff9eb73fc8e6.wav");
+% [distortion_audio, Fs_4] = audioread("./distortion/distortion_0a282672-c22c-59ff-faaa-ff9eb73fc8e6.wav");
+% [chorus_audio, Fs_5] = audioread("./chorus/chorus_0a282672-c22c-59ff-faaa-ff9eb73fc8e6.wav");
+% 
+% 
+% 
+% % [y,Fs] = audioread("./dry/dry_0a282672-c22c-59ff-faaa-ff9eb73fc8e6.wav");
+% % window=hamming(512); %%window with size of 512 points
+% % noverlap=256; %%the number of points for repeating the window
+% % nfft=1024; %%size of the fit
+% % spectrogram(y,window,noverlap,1024,Fs,'yaxis'); % no outputs specified will create a convenience plot
+% % colormap(gray) % for black and white
+% 
+% %% 
+% 
+% % Define a consistent dynamic range (dB)
+% color_range = [-70 0]; 
+% 
+% figure(1)
+% tiledlayout(3,2) % Better than subplot for alignment
+% 
+% % --- Dry Signal (The Reference) ---
+% nexttile
+% [s_dry, f, t] = melSpectrogram(dry_audio, Fs_1);
+% imagesc(t, f, 10*log10(s_dry));
+% title('Dry Audio');
+% set(gca, 'YDir', 'normal');
+% clim(color_range);
+% colormap('turbo'); % 'turbo' or 'magma' are better for contrast than 'parula'
+% 
+% % Helper list for the loops
+% effects = {delay_audio, reverb_audio, distortion_audio, chorus_audio};
+% titles = {'Added Energy: Delay', 'Added Energy: Reverb', 'Added Energy: Distortion', 'Added Energy: Chorus'};
+% 
+% for i = 1:4
+%     nexttile
+%     % Get spectrogram of the effect
+%     [s_effect, ~, ~] = melSpectrogram(effects{i}, Fs_1);
+% 
+%     % Calculate the difference in the log domain (Decibels)
+%     % This shows what the effect ADDED to the dry signal
+%     diff_db = 10*log10(s_effect) - 10*log10(s_dry);
+% 
+%     imagesc(t, f, diff_db);
+%     title(titles{i});
+%     set(gca, 'YDir', 'normal');
+% 
+%     % Standardize the cutoff. 
+%     % For differences, a range like [-20 40] highlights the "boost"
+%     clim([-10 50]); 
+% end
+% 
+% cb = colorbar;
+% cb.Layout.Tile = 'east';
+% cb.Label.String = 'Relative Gain (dB)';
+% 
