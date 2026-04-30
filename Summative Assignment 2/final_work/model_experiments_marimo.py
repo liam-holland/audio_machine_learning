@@ -385,7 +385,7 @@ def _(
         print(f"\n" + "="*40)
         print(f"RUNNING: {model_name.upper()}")
         print("="*40)
-    
+
         # Train and Evaluate
         run = train_and_evaluate(
             model_name=model_name,
@@ -411,7 +411,7 @@ def _(
         classes = run["class_names"]
         y_true_test = run["metrics"]["test"]["y_true"]
         y_pred_test = run["metrics"]["test"]["y_pred"]
-    
+
         # Calculate Raw Confusion Matrix
         cm = confusion_matrix(y_true_test, y_pred_test)
 
@@ -442,7 +442,7 @@ def _(
                          ax=ax)
 
         title = f"{model_name.upper()} - Test Confusion Matrix"
-    
+
         ax.set_title(title, pad=30, fontsize=TITLE_SIZE, fontweight='bold')
         ax.set_ylabel('True Label', fontsize=LABEL_SIZE, fontweight='bold')
         ax.set_xlabel('Predicted Label', fontsize=LABEL_SIZE, fontweight='bold')
@@ -456,7 +456,7 @@ def _(
         file_name = f"./images/{model_name}_confustion_matrix.png"
         plt.savefig(file_name, bbox_inches='tight', dpi=300)
         plt.close()
-    
+
         print(f"Successfully saved confusion matrix to: {file_name}")
     return
 
@@ -1699,7 +1699,7 @@ def _(
         # --- 1. Calculate and Print Accuracy Info ---
         acc = accuracy_score(y_true, y_pred)
         f1 = f1_score(y_true, y_pred, average='macro')
-    
+
         print("\n" + "="*40)
         print("HYBRID CNN - TEST RESULTS")
         print("="*40)
@@ -1744,11 +1744,11 @@ def _(
         plt.title(title_text, pad=30, fontsize=TITLE_SIZE, fontweight='bold')
         plt.ylabel('True Label', fontsize=LABEL_SIZE, fontweight='bold')
         plt.xlabel('Predicted Label', fontsize=LABEL_SIZE, fontweight='bold')
-    
+
         # Fix rotations
         plt.xticks(rotation=45, ha='right', fontsize=TICK_SIZE)
         plt.yticks(rotation=0, fontsize=TICK_SIZE) 
-    
+
         plt.tight_layout()
         plt.savefig(f'./images/{title_text.replace(chr(10), " ")}.png', bbox_inches='tight', dpi=300)
 
@@ -1774,7 +1774,7 @@ def _(
         # Apply same high-DPI save logic
         file_path = './images/Hybrid CNN - TSNE.png'
         fig.savefig(file_path, bbox_inches='tight', dpi=300)
-    
+
         print(f"Saved t-SNE plot to: {file_path}")
 
         return fig
@@ -1797,7 +1797,7 @@ def _(pandas, plt, sns):
 
         # 2. Calculate accuracy
         df_results['is_correct'] = (df_results['true'] == df_results['pred'])
-    
+
         # Group and calculate mean (accuracy), then convert to percentage
         instrument_perf = (
             df_results.groupby('instrument')['is_correct']
@@ -1810,20 +1810,20 @@ def _(pandas, plt, sns):
         # 3. Plotting
         plt.figure(figsize=(10, 6))
         sns.set_style("whitegrid")
-    
+
         plot = sns.barplot(
             data=instrument_perf, 
             x='accuracy_pct', 
             y='instrument', 
             palette='viridis'
         )
-    
+
         # Add labels and title
         plt.title('Classification Accuracy per Instrument', fontsize=15, pad=20)
         plt.xlabel('Accuracy (%)', fontsize=12)
         plt.ylabel('Instrument', fontsize=12)
         plt.xlim(0, 105) 
-    
+
         # Add text labels on the bars for precision
         for i, p in enumerate(plot.patches):
             width = p.get_width()
@@ -1833,17 +1833,101 @@ def _(pandas, plt, sns):
                 f'{width:.1f}%', 
                 va='center'
             )
-    
+
         plt.tight_layout()
 
         file_path = './images/Instrument - Accuracy.png'
         plt.savefig(file_path, bbox_inches='tight', dpi=300)
-    
+
         plt.show()
-    
+
         return instrument_perf
 
     return (plot_instrument_accuracy,)
+
+
+@app.cell
+def _(pandas, plt, sns):
+    def plot_instrument_accuracy_by_effect(y_true, y_pred, instruments, class_names):
+        """
+        Generates an A4-friendly grouped bar chart showing accuracy 
+        per instrument across different effect classes.
+        """
+        # 1. Create DataFrame from model outputs
+        df_results = pandas.DataFrame({
+            'true_idx': y_true,
+            'pred_idx': y_pred,
+            'instrument': instruments
+        })
+
+        # 2. Map numerical indices to dynamic class names
+        df_results['effect'] = df_results['true_idx'].apply(lambda x: class_names[x])
+        df_results['is_correct'] = (df_results['true_idx'] == df_results['pred_idx'])
+
+        # 3. Calculate accuracy breakdown
+        perf_breakdown = (
+            df_results.groupby(['instrument', 'effect'])['is_correct']
+            .mean()
+            .reset_index()
+        )
+        perf_breakdown['accuracy_pct'] = perf_breakdown['is_correct'] * 100
+
+        # Sort instruments by average performance to maintain the report's narrative[cite: 1]
+        avg_order = perf_breakdown.groupby('instrument')['accuracy_pct'].mean().sort_values(ascending=False).index
+
+        # 4. A4-Optimized Plotting[cite: 1]
+        # Standard A4 width is roughly 8.27 inches; we use a 1.2:1 ratio for clear vertical stacking
+        plt.figure(figsize=(8.5, 11)) 
+        sns.set_theme(style="whitegrid", font_scale=1.1)
+
+        plot = sns.barplot(
+            data=perf_breakdown, 
+            x='accuracy_pct', 
+            y='instrument', 
+            hue='effect',
+            order=avg_order,
+            palette='viridis',
+            linewidth=0.8
+        )
+
+        # 5. Professional Formatting[cite: 1]
+        plt.title('Classification Accuracy: Instrument vs. Audio Effect', 
+                  fontsize=18, pad=30, fontweight='bold')
+        plt.xlabel('Model Accuracy (%)', fontsize=14, labelpad=15)
+        plt.ylabel('Instrument Source', fontsize=14, labelpad=15)
+        plt.xlim(0, 118) # Buffer for percentage labels
+    
+        # Position legend at the bottom for A4 vertical flow
+        plt.legend(title='Applied Audio Effect', 
+                   loc='upper center', 
+                   bbox_to_anchor=(0.5, -0.08), 
+                   ncol=3, 
+                   frameon=False, 
+                   shadow=True)
+
+        # 6. Add precision text labels[cite: 1]
+        for p in plot.patches:
+            width = p.get_width()
+            if width > 0: 
+                plot.text(
+                    width + 1.5, 
+                    p.get_y() + p.get_height()/2, 
+                    f'{width:.0f}%', 
+                    va='center',
+                    fontsize=10,
+                    fontweight='semibold'
+                )
+
+        # 7. High-Resolution Save[cite: 1]
+        plt.tight_layout()
+        file_path = './images/A4_Instrument_Effect_Evaluation.png'
+        plt.savefig(file_path, bbox_inches='tight', dpi=300)
+
+        plt.show()
+
+        return perf_breakdown
+
+    return (plot_instrument_accuracy_by_effect,)
 
 
 @app.cell
@@ -1905,6 +1989,18 @@ def _(
 
     instrument_fig = plot_instrument_accuracy(y_true, y_pred, instruments )
     return cm_fig, instrument_fig, tsne_fig
+
+
+@app.cell
+def _(
+    class_names_final,
+    instruments,
+    plot_instrument_accuracy_by_effect,
+    y_pred,
+    y_true,
+):
+    intrument_clas_fig = plot_instrument_accuracy_by_effect(y_true, y_pred, instruments, class_names_final)
+    return
 
 
 @app.cell

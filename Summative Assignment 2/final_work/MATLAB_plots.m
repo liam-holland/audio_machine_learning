@@ -21,7 +21,7 @@ titles = {'Delay vs Dry', 'Reverb vs Dry', 'Distortion vs Dry', 'Chorus vs Dry'}
 % =======================
 eps_val = 1e-10;
 color_range = [-70 0];
-diff_range = [-10 50];
+diff_range = [-10 30];
 
 % =======================
 % Dry reference
@@ -30,16 +30,26 @@ diff_range = [-10 50];
 s_dry_db = 10*log10(s_dry + eps_val);
 
 % =======================
-% Plot spectrograms
+% Plot spectrograms (A4 portrait, report-ready)
 % =======================
 figure(1)
-tiledlayout(3,2)
+clf
+
+% Set A4 portrait size (in cm)
+set(gcf, 'Units', 'centimeters', 'Position', [2 2 21 29.7]);
+set(gcf, 'PaperUnits', 'centimeters', 'PaperSize', [21 29.7]);
+set(gcf, 'PaperPosition', [0 0 21 29.7]);
+
+tiledlayout(3,2, 'Padding', 'compact', 'TileSpacing', 'compact');
+
+% Font size for report readability
+fs = 10;
 
 % Dry
 nexttile
 imagesc(t, f, s_dry_db);
-title('Dry Audio (Reference)');
-set(gca, 'YDir', 'normal');
+title('Dry Audio (Reference)', 'FontSize', fs);
+set(gca, 'YDir', 'normal', 'FontSize', fs);
 clim(color_range);
 colormap('turbo');
 
@@ -54,18 +64,22 @@ for i = 1:length(effects)
     
     diff_db = s_eff_db - s_dry_db;
     
-    % Store mean over time
     mean_diffs(:, i) = mean(diff_db, 2);
     
     imagesc(t, f, diff_db);
-    title(titles{i});
-    set(gca, 'YDir', 'normal');
+    title(titles{i}, 'FontSize', fs);
+    set(gca, 'YDir', 'normal', 'FontSize', fs);
     clim(diff_range);
 end
 
+% Shared colorbar
 cb = colorbar;
 cb.Layout.Tile = 'east';
 cb.Label.String = 'Spectral Difference (dB)';
+cb.FontSize = fs;
+
+% Optional: global title
+sgtitle('Mel Spectrogram Comparison of Audio Effects', 'FontSize', 12, 'FontWeight', 'bold');
 
 % =======================
 % Mean spectral difference
@@ -74,11 +88,15 @@ figure(2)
 hold on
 
 for i = 1:length(effects)
-    plot(f, mean_diffs(:, i), 'DisplayName', titles{i});
+    plot(f, mean_diffs(:, i),'LineWidth', 1.4, 'DisplayName', titles{i});
 end
 
 xlabel('Frequency (Hz)');
 ylabel('Mean Spectral Difference (dB)');
 title('Average Spectral Difference Relative to Dry Signal');
+fontsize(14,"points");
 legend;
 grid on;
+
+saveas(1,"./images/mel_spec_graphs",'png');
+saveas(2,"./images/avg_spec_differences",'png');
