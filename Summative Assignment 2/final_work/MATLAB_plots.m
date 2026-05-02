@@ -14,7 +14,7 @@ close all
 [chorus_audio, ~] = audioread("./chorus/chorus_0a282672-c22c-59ff-faaa-ff9eb73fc8e6.wav");
 
 effects = {delay_audio, reverb_audio, distortion_audio, chorus_audio};
-titles = {'Delay vs Dry', 'Reverb vs Dry', 'Distortion vs Dry', 'Chorus vs Dry'};
+titles = {'A: Delay vs Dry', 'B: Reverb vs Dry', 'C: Distortion vs Dry', 'D: Chorus vs Dry'};
 
 % =======================
 % Parameters
@@ -68,6 +68,8 @@ for i = 1:length(effects)
     
     imagesc(t, f, diff_db);
     title(titles{i}, 'FontSize', fs);
+    ylabel("Frequency(Hz)")
+    xlabel("Time(s)")
     set(gca, 'YDir', 'normal', 'FontSize', fs);
     clim(diff_range);
 end
