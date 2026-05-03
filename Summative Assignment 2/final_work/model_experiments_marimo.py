@@ -182,7 +182,7 @@ def _(feature_cols, sklearn, test_df, train_df, val_df):
     return X_test, X_train, X_val, y_test, y_train, y_val
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(
     LogisticRegression,
     MLPClassifier,
@@ -1896,7 +1896,7 @@ def _(pandas, plt, sns):
         plt.xlabel('Model Accuracy (%)', fontsize=14, labelpad=15)
         plt.ylabel('Instrument Source', fontsize=14, labelpad=15)
         plt.xlim(0, 118) # Buffer for percentage labels
-    
+
         # Position legend at the bottom for A4 vertical flow
         plt.legend(title='Applied Audio Effect', 
                    loc='upper center', 
